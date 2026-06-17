@@ -93,22 +93,30 @@ function CategoryFallbackLayout({
             <h2 className="text-lg font-semibold text-gray-800">全部文章</h2>
             <span className="text-sm text-gray-400">({totalPosts})</span>
           </div>
-          <PostList
-            posts={posts}
-            layout="grid"
-            columns={2}
-          />
+          <PostList posts={posts} layout="grid" columns={2} />
           <Pagination currentPage={page} totalPages={totalPages} />
         </section>
       ) : (
         <div className="py-20 text-center">
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-lg bg-gray-100">
-            <svg className="h-8 w-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+            <svg
+              className="h-8 w-8 text-gray-300"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.5}
+                d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"
+              />
             </svg>
           </div>
           <p className="text-lg font-medium text-gray-500">该分类下暂无文章</p>
-          <p className="mt-1 text-sm text-gray-400">请稍后再来，或浏览其他分类</p>
+          <p className="mt-1 text-sm text-gray-400">
+            请稍后再来，或浏览其他分类
+          </p>
         </div>
       )}
     </div>
@@ -196,7 +204,10 @@ async function ArticleDetailPage({ post }: { post: Post }) {
 // URL routing rules:
 //   Last segment is numeric → Article page  (/42, /docs/42, /docs/guide/42)
 //   Otherwise              → Category page (/docs, /docs/guide)
-export default async function CatchAllPage({ params, searchParams }: PageProps) {
+export default async function CatchAllPage({
+  params,
+  searchParams,
+}: PageProps) {
   const { slug } = await params;
   const { page: pageStr } = await searchParams;
   const lastSegment = slug[slug.length - 1];
@@ -214,7 +225,7 @@ export default async function CatchAllPage({ params, searchParams }: PageProps) 
 
   // ── Category page ──
   const fullSlug = slug.join("/");
-  const page = Math.max(1, parseInt(pageStr || '1') || 1);
+  const page = Math.max(1, parseInt(pageStr || "1") || 1);
   const pageSize = 20;
 
   const category = await fetchAPI<
