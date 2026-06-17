@@ -11,29 +11,33 @@ datasource db {
 // 站点（替代旧 SiteSettings，支持多站点）
 // ==========================================
 model Site {
-  id              Int       @id @default(autoincrement())
-  name            String                             // 站点名称
-  slug            String    @unique                  // 内部标识（?site=slug 用）
-  domain          String    @unique                  // 绑定域名
-  isDefault       Boolean   @default(false)          // 默认站点（dev 兜底）
-  description     String?   @db.Text                 // 站点描述
-  logo            String?                            // Logo URL
-  favicon         String?                            // Favicon URL
-  primaryColor    String    @default("#3B82F6")      // 主题色
-  contactEmail    String?                            // 联系邮箱
-  contactPhone    String?                            // 联系电话
-  address         String?                            // 地址
-  socialLinks     Json?                              // { github: "...", twitter: "..." }
-  footerText      String?   @db.Text                 // 页脚文案
-  copyright       String?                            // 版权信息
-  gaId            String?                            // Google Analytics ID
-  isActive        Boolean   @default(true)           // 是否启用
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id            Int      @id @default(autoincrement())
+  name          String // 站点名称
+  slug          String   @unique // 内部标识（?site=slug 用）
+  domain        String   @unique // 绑定域名
+  isDefault     Boolean  @default(false) // 默认站点（dev 兜底）
+  description   String?  @db.Text // 站点描述
+  logo          String? // Logo URL
+  favicon       String? // Favicon URL
+  primaryColor  String   @default("#3B82F6") // 主题色
+  contactEmail  String? // 联系邮箱
+  contactPhone  String? // 联系电话
+  address       String? // 地址
+  socialLinks   Json? // { github: "...", twitter: "..." }
+  socialQRCodes Json? // { "微信公众号": "/uploads/1/qr.png", "抖音": "/uploads/1/dy.png" }
+  footerText    String?  @db.Text // 页脚文案
+  copyright     String? // 版权信息
+  gaId          String? // Google Analytics ID
+  icp           String? // ICP 备案号（如 京ICP备2024000001号）
+  isActive      Boolean  @default(true) // 是否启用
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
-  categories   Category[]
-  posts        Post[]
-  pageBlocks   PageBlock[]
+  categories    Category[]
+  posts         Post[]
+  pageBlocks    PageBlock[]
+  cardTemplates CardTemplate[]
+  blockTemplates BlockTemplate[]
   media        Media[]
 
   @@index([domain])
@@ -45,12 +49,13 @@ model Site {
 // ==========================================
 model Category {
   id          Int        @id @default(autoincrement())
-  siteId      Int                                 // 所属站点
+  siteId      Int // 所属站点
   site        Site       @relation(fields: [siteId], references: [id], onDelete: Cascade)
   name        String
   slug        String
   description String?    @db.Text
   icon        String?
+  url         String? // 外部链接，设置后导航点击在新 tab 打开，不展示目录页
   sortOrder   Int        @default(0)
   isVisible   Boolean    @default(true)
   parentId    Int?
@@ -69,30 +74,30 @@ model Category {
 // 文章（加 siteId）
 // ==========================================
 model Post {
-  id          Int        @id @default(autoincrement())
-  siteId      Int                                 // 所属站点
-  site        Site       @relation(fields: [siteId], references: [id], onDelete: Cascade)
-  title       String
-  slug        String
-  content     String     @db.LongText
-  excerpt     String?    @db.Text
-  coverImage  String?
-  status      PostStatus @default(DRAFT)
-  sortOrder   Int        @default(0)
-  categoryId  Int
-  category    Category   @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  authorId    String
-  author      User       @relation(fields: [authorId], references: [id])
-  tags        PostTag[]
+  id         Int        @id @default(autoincrement())
+  siteId     Int // 所属站点
+  site       Site       @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  title      String
+  slug       String
+  content    String     @db.LongText
+  excerpt    String?    @db.Text
+  coverImage String?
+  status     PostStatus @default(DRAFT)
+  sortOrder  Int        @default(0)
+  categoryId Int?
+  category   Category?  @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  authorId   String
+  author     User       @relation(fields: [authorId], references: [id])
+  tags       PostTag[]
 
-  seoTitle    String?
-  seoDesc     String?    @db.Text
+  seoTitle String?
+  seoDesc  String? @db.Text
 
-  viewCount   Int        @default(0)
-  isFeatured  Boolean    @default(false)
+  viewCount   Int       @default(0)
+  isFeatured  Boolean   @default(false)
   publishedAt DateTime?
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   @@unique([siteId, categoryId, slug])
   @@index([siteId, sortOrder])
@@ -148,7 +153,7 @@ model PostTag {
 // ==========================================
 model PageBlock {
   id        Int       @id @default(autoincrement())
-  siteId    Int                                // 所属站点
+  siteId    Int // 所属站点
   site      Site      @relation(fields: [siteId], references: [id], onDelete: Cascade)
   pageType  String
   blockType BlockType
@@ -168,6 +173,8 @@ enum BlockType {
   CTA
   POST_LIST
   CATEGORY_LIST
+  TAG_LIST
+  CARD_GRID
   FAQ
   MARKDOWN
   TESTIMONIALS
@@ -176,11 +183,51 @@ enum BlockType {
 }
 
 // ==========================================
+// 卡片模板
+// ==========================================
+model CardTemplate {
+  id          Int      @id @default(autoincrement())
+  siteId      Int
+  site        Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  name        String
+  description String?  @db.Text
+  isPreset    Boolean  @default(false)
+  config      Json     @default("{}")
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  blockTemplates BlockTemplate[]
+
+  @@index([siteId])
+}
+
+// ==========================================
+// 区块模板
+// ==========================================
+model BlockTemplate {
+  id              Int            @id @default(autoincrement())
+  siteId          Int
+  site            Site           @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  name            String
+  description     String?        @db.Text
+  cardTemplateId  Int?
+  cardTemplate    CardTemplate?  @relation(fields: [cardTemplateId], references: [id], onDelete: SetNull)
+  contentSource   String                           // subcategories|articles|tags|all_categories|all_articles
+  columns         Json           @default("{\"desktop\":3,\"tablet\":2,\"mobile\":1}")
+  isPreset        Boolean        @default(false)
+  sortOrder       Int            @default(0)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@index([siteId])
+}
+
+// ==========================================
 // 媒体文件（加 siteId）
 // ==========================================
 model Media {
   id        Int      @id @default(autoincrement())
-  siteId    Int                               // 所属站点
+  siteId    Int // 所属站点
   site      Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
   filename  String
   url       String

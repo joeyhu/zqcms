@@ -32,9 +32,9 @@ export interface SiteContext {
 /**
  * 解析当前站点
  * 优先级:
- *   ① Host 域名匹配（生产 + localhost子域名）
- *   ② ?site={slug} 查询参数（开发便捷切换）
- *   ③ X-Site-Id header（管理后台切换）
+ *   ① X-Site-Id header（管理后台切换）
+ *   ② ?site={slug} 查询参数（开发便捷切换 / URL 显式指定）
+ *   ③ Host 域名匹配（生产 + localhost）
  *   ④ 默认站点 isDefault=true（兜底）
  */
 export async function resolveSite(params: {
@@ -44,7 +44,7 @@ export async function resolveSite(params: {
 }): Promise<SiteContext | null> {
   const { host, siteSlug, siteIdHeader } = params;
 
-  // ③ 管理后台 X-Site-Id header（最高优先级，管理员显式指定）
+  // ① 管理后台 X-Site-Id header（最高优先级，管理员显式指定）
   if (siteIdHeader) {
     const siteId = parseInt(siteIdHeader, 10);
     if (!isNaN(siteId)) {
@@ -53,16 +53,16 @@ export async function resolveSite(params: {
     }
   }
 
-  // ① Host 域名匹配
-  if (host) {
-    const cleanHost = host.split(':')[0]; // 去掉端口号
-    const site = await prisma.site.findUnique({ where: { domain: cleanHost } });
+  // ② ?site={slug} 查询参数（优先于域名匹配，支持开发模式切换）
+  if (siteSlug) {
+    const site = await prisma.site.findUnique({ where: { slug: siteSlug } });
     if (site && site.isActive) return { ...site, socialLinks: normalizeJson(site.socialLinks) };
   }
 
-  // ② ?site={slug} 查询参数
-  if (siteSlug) {
-    const site = await prisma.site.findUnique({ where: { slug: siteSlug } });
+  // ③ Host 域名匹配
+  if (host) {
+    const cleanHost = host.split(':')[0]; // 去掉端口号
+    const site = await prisma.site.findUnique({ where: { domain: cleanHost } });
     if (site && site.isActive) return { ...site, socialLinks: normalizeJson(site.socialLinks) };
   }
 

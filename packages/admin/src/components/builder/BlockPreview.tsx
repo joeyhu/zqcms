@@ -1,7 +1,23 @@
 import { BlockType } from '@zqcms/shared/types';
 import type { PageBlock } from '@zqcms/shared/types';
-import { BLOCK_TYPE_LABELS } from '@zqcms/shared/constants';
+import { BLOCK_TYPE_LABELS, CARD_STYLE_PRESETS, RESPONSIVE_COLUMNS_DEFAULTS } from '@zqcms/shared/constants';
 import { Layout, Grid3X3, FileText, FolderTree, MessageCircleQuestion, FileCode, Megaphone, Minus } from 'lucide-react';
+
+function getCardPreviewClass(config: Record<string, unknown>) {
+  const cardStyle = (config.cardStyle as Record<string, string>) || {};
+  const preset = CARD_STYLE_PRESETS.find((p) => p.id === cardStyle.preset);
+  const base = preset?.className || 'bg-white border border-gray-100';
+  return `${base} p-4 rounded-xl shadow-sm`;
+}
+
+function getPreviewGridClass(config: Record<string, unknown>) {
+  const rc = (config.responsiveColumns as Record<string, number>) || RESPONSIVE_COLUMNS_DEFAULTS;
+  const d = rc.desktop || 3;
+  const t = rc.tablet || 2;
+  const m = rc.mobile || 1;
+  const cols = config.columns ? Number(config.columns) : d; // fallback to old config
+  return `grid-cols-${Math.min(m, 2)} md:grid-cols-${Math.min(t, 4)} lg:grid-cols-${Math.min(cols, 6)}`;
+}
 
 interface BlockPreviewProps {
   block: PageBlock;
@@ -63,17 +79,18 @@ function renderFeatures(config: Record<string, unknown>) {
 function renderPostList(config: Record<string, unknown>) {
   const limit = Number(config.limit) || 6;
   const layout = (config.layout as string) || 'grid';
-  const cols = Number(config.columns) || 3;
+  const gridClass = getPreviewGridClass(config);
+  const cardClass = getCardPreviewClass(config);
   const count = Math.min(limit, 6);
   return (
     <div className="px-6 py-10">
       <h3 className="text-sm font-medium text-gray-400 mb-4">📰 文章列表 · {layout === 'grid' ? '网格' : '列表'} · {limit} 篇</h3>
-      <div className={layout === 'grid' ? `grid gap-4 ${cols === 3 ? 'grid-cols-3' : 'grid-cols-2'}` : 'space-y-3'}>
+      <div className={layout === 'grid' ? `grid gap-4 ${gridClass}` : 'space-y-3'}>
         {Array.from({ length: count }, (_, i) => (
-          <div key={i} className="rounded-lg border bg-white p-4 shadow-sm">
-            <div className="h-3 w-3/4 rounded bg-gray-200 mb-2" />
-            <div className="h-2 w-full rounded bg-gray-100 mb-1" />
-            <div className="h-2 w-2/3 rounded bg-gray-100" />
+          <div key={i} className={cardClass}>
+            <div className="h-3 w-3/4 rounded bg-current opacity-20 mb-2" />
+            <div className="h-2 w-full rounded bg-current opacity-10 mb-1" />
+            <div className="h-2 w-2/3 rounded bg-current opacity-10" />
           </div>
         ))}
       </div>
@@ -82,18 +99,19 @@ function renderPostList(config: Record<string, unknown>) {
 }
 
 function renderCategoryList(config: Record<string, unknown>) {
-  const cols = Number(config.columns) || 3;
   const showCount = config.showCount !== false;
-  const gridClass = cols === 2 ? 'grid-cols-2' : cols === 4 ? 'grid-cols-4' : 'grid-cols-3';
+  const gridClass = getPreviewGridClass(config);
+  const cardClass = getCardPreviewClass(config);
+  const cols = Number(config.columns) || (config.responsiveColumns as Record<string, number>)?.desktop || 3;
   return (
     <div className="px-6 py-10 bg-gray-50">
       <h3 className="text-sm font-medium text-gray-400 mb-4">📁 分类列表</h3>
       <div className={`grid gap-4 ${gridClass}`}>
         {Array.from({ length: cols * 2 }, (_, i) => (
-          <div key={i} className="rounded-xl border bg-white p-5 shadow-sm">
-            <h4 className="font-semibold text-gray-700">分类 {i + 1}</h4>
-            <p className="mt-1 text-xs text-gray-400 line-clamp-2">分类描述文字</p>
-            {showCount && <p className="mt-2 text-xs text-gray-300">12 篇文章</p>}
+          <div key={i} className={cardClass}>
+            <h4 className="font-semibold text-current">分类 {i + 1}</h4>
+            <p className="mt-1 text-xs opacity-60 line-clamp-2">分类描述文字</p>
+            {showCount && <p className="mt-2 text-xs opacity-40">12 篇文章</p>}
           </div>
         ))}
       </div>

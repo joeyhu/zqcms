@@ -4,10 +4,12 @@ import { Plus, Edit3, Trash2, GripVertical } from 'lucide-react';
 import { fetchAPI } from '@/lib/api-client';
 import type { Post, PaginatedResponse } from '@zqcms/shared/types';
 import { POST_STATUS_LABELS } from '@zqcms/shared/constants';
+import { useConfirm } from '@/components/ui/ConfirmDialog';
 import toast from 'react-hot-toast';
 
 export function PostListPage() {
   const navigate = useNavigate();
+  const confirm = useConfirm();
   const [posts, setPosts] = useState<Post[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -29,7 +31,8 @@ export function PostListPage() {
   useEffect(() => { loadPosts(); }, [page]);
 
   const handleDelete = async (id: number, title: string) => {
-    if (!confirm(`确定删除文章「${title}」？`)) return;
+    const ok = await confirm({ title: '删除文章', message: `确定删除文章「${title}」？`, danger: true });
+    if (!ok) return;
     try {
       await fetchAPI(`/posts/by-id/${id}`, { method: 'DELETE' });
       toast.success('已删除');

@@ -9,26 +9,20 @@ import type { NextRequest } from 'next/server';
  *   2. Cookie 中 zqcms_site（从上次选择恢复）
  *   3. 无则使用默认站点
  *
- * 将站点 slug 注入 x-zqcms-site 自定义 header，供 fetchAPI 读取。
+ * /uploads/* 路径不经过此 middleware，由 next.config.ts rewrites 直接代理到后端
  */
 export function middleware(request: NextRequest) {
-  // ① URL 参数优先
   const urlSiteSlug = request.nextUrl.searchParams.get('site');
-  // ② Cookie 兜底
   const cookieSiteSlug = request.cookies.get('zqcms_site')?.value;
-
   const siteSlug = urlSiteSlug || cookieSiteSlug || '';
   const response = NextResponse.next();
 
   if (siteSlug) {
-    // 注入自定义 header，fetchAPI 从此读取
     response.headers.set('x-zqcms-site', siteSlug);
-
-    // URL 参数触发的切换 → 持久化到 cookie（覆盖旧值）
     if (urlSiteSlug) {
       response.cookies.set('zqcms_site', urlSiteSlug, {
         path: '/',
-        maxAge: 60 * 60 * 24 * 365, // 1 年
+        maxAge: 60 * 60 * 24 * 365,
         sameSite: 'lax',
       });
     }
@@ -38,5 +32,6 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next|api|favicon.ico).*)'],
+  // 排除 /uploads/ 路径（由 rewrites 代理），避免 middleware 干扰
+  matcher: ['/((?!_next|api|favicon.ico|uploads).*)'],
 };

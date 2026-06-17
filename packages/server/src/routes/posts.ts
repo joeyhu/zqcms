@@ -1,6 +1,7 @@
 import { Elysia, t } from 'elysia';
 import { postService } from '../services/post.service';
 import { authBeforeHandle } from '../middleware/auth';
+import { revalidateFrontend } from '../lib/revalidate';
 
 // Helpers for derived context (available at runtime from main app derive)
 const S = (ctx: unknown) => (ctx as Record<string, unknown>);
@@ -38,6 +39,7 @@ export const postRoutes = new Elysia({ prefix: '/api/posts' })
   })
   .guard({ beforeHandle: [authBeforeHandle] }, (app) =>
     app
+      .onAfterResponse(() => { revalidateFrontend(); })
       .post('/', async (ctx) => {
         const u = authUser(ctx);
         const b = S(ctx).body as Record<string, unknown>;
@@ -68,7 +70,8 @@ export const postRoutes = new Elysia({ prefix: '/api/posts' })
         return postService.delete(Number((S(ctx).params as Record<string, string>).id));
       })
       .post('/reorder', async (ctx) => {
-        return postService.reorder((S(ctx).body as { items: { id: number; sortOrder: number }[] }).items);
+        await postService.reorder((S(ctx).body as { items: { id: number; sortOrder: number }[] }).items);
+        return { success: true };
       }, {
         body: t.Object({ items: t.Array(t.Object({ id: t.Number(), sortOrder: t.Number() })) }),
       })

@@ -9,7 +9,7 @@ interface FetchOptions extends RequestInit {
 }
 
 export async function fetchAPI<T>(endpoint: string, options: FetchOptions = {}): Promise<T> {
-  const { revalidate = 60, ...fetchOpts } = options;
+  const { revalidate = 5, ...fetchOpts } = options;
   let apiUrl = `${API_BASE}${endpoint}`;
 
   // Read host from Next.js headers (SSR only)

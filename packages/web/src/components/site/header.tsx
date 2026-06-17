@@ -1,13 +1,46 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { useState } from 'react';
-import { Menu, X, ChevronDown } from 'lucide-react';
-import type { SiteSettings, Category } from '@zqcms/shared/types';
+import Link from "next/link";
+import { useState } from "react";
+import { Menu, X, ChevronDown, ExternalLink } from "lucide-react";
+import type { SiteSettings, Category } from "@zqcms/shared/types";
 
 interface HeaderProps {
   settings: SiteSettings;
   categories: Category[];
+}
+
+/** 渲染导航链接：有 url 时新开 tab，无 url 时走内部路由 */
+function NavLink({
+  cat,
+  className = "",
+}: {
+  cat: Category;
+  className?: string;
+}) {
+  const linkContent = (
+    <>
+      {cat.name}
+      {cat.url && <ExternalLink className="h-3 w-3 opacity-40" />}
+    </>
+  );
+
+  const linkClass = `group relative inline-flex items-center gap-1 transition-colors ${className}`;
+
+  if (cat.url) {
+    return (
+      <a href={cat.url} target="_blank" rel="noopener noreferrer" className={linkClass}>
+        {linkContent}
+      </a>
+    );
+  }
+
+  return (
+    <Link href={`/${cat.slug}`} className={linkClass}>
+      {linkContent}
+      <span className="absolute -bottom-0.5 left-0 right-0 mx-auto h-0.5 w-0 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 opacity-0 transition-all duration-300 group-hover:w-full group-hover:opacity-100" />
+    </Link>
+  );
 }
 
 export function Header({ settings, categories }: HeaderProps) {
@@ -25,13 +58,21 @@ export function Header({ settings, categories }: HeaderProps) {
   }
 
   return (
-    <header className="sticky top-0 z-50 border-b bg-white/80 backdrop-blur-sm">
+    <header className="sticky top-0 z-50 border-b border-gray-100/80 bg-white/80 backdrop-blur-xl supports-[backdrop-filter]:bg-white/60">
+      {/* Subtle gradient bar at top */}
+      <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500" />
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
         {/* Logo / Site Name */}
         <Link href="/" className="flex items-center gap-2 font-bold text-xl">
-          {settings.logo ? (
-            <img src={settings.logo} alt={settings.siteName} className="h-8 w-auto" />
-          ) : (
+          {settings.logo && (
+            <img
+              src={settings.logo}
+              alt={settings.siteName}
+              className="h-8 w-auto"
+            />
+          )}
+
+          {settings.siteName && (
             <span className="text-blue-600">{settings.siteName}</span>
           )}
         </Link>
@@ -40,42 +81,36 @@ export function Header({ settings, categories }: HeaderProps) {
         <nav className="hidden items-center gap-1 md:flex">
           {topCategories.map((cat) => {
             const children = childMap.get(cat.id) || [];
-            const href = `/${cat.slug}`;
 
             if (children.length === 0) {
               return (
-                <Link
+                <NavLink
                   key={cat.id}
-                  href={href}
+                  cat={cat}
                   className="rounded-lg px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors"
-                >
-                  {cat.name}
-                </Link>
+                />
               );
             }
 
             return (
               <div key={cat.id} className="group relative">
-                <Link
-                  href={href}
+                <NavLink
+                  cat={cat}
                   className="flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors"
-                >
-                  {cat.name}
-                  <ChevronDown className="h-3.5 w-3.5" />
-                </Link>
-                <div className="invisible absolute left-0 top-full pt-1 opacity-0 group-hover:visible group-hover:opacity-100 transition-all">
-                  <div className="rounded-lg border bg-white py-2 shadow-lg min-w-[160px]">
-                    {children.map((child) => (
-                      <Link
-                        key={child.id}
-                        href={`/${child.slug}`}
-                        className="block px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                      >
-                        {child.name}
-                      </Link>
-                    ))}
+                />
+                {!cat.url && (
+                  <div className="invisible absolute left-0 top-full pt-1 opacity-0 group-hover:visible group-hover:opacity-100 transition-all">
+                    <div className="rounded-lg border bg-white py-2 shadow-lg min-w-[160px]">
+                      {children.map((child) => (
+                        <NavLink
+                          key={child.id}
+                          cat={child}
+                          className="block px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                        />
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             );
           })}
@@ -86,7 +121,11 @@ export function Header({ settings, categories }: HeaderProps) {
           className="md:hidden rounded-lg p-2 text-gray-600 hover:bg-gray-100"
           onClick={() => setMobileOpen(!mobileOpen)}
         >
-          {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          {mobileOpen ? (
+            <X className="h-5 w-5" />
+          ) : (
+            <Menu className="h-5 w-5" />
+          )}
         </button>
       </div>
 
@@ -97,23 +136,25 @@ export function Header({ settings, categories }: HeaderProps) {
             const children = childMap.get(cat.id) || [];
             return (
               <div key={cat.id}>
-                <Link
-                  href={`/${cat.slug}`}
+                <div
                   className="block rounded-lg px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
                   onClick={() => setMobileOpen(false)}
                 >
-                  {cat.name}
-                </Link>
-                {children.map((child) => (
-                  <Link
-                    key={child.id}
-                    href={`/${child.slug}`}
-                    className="ml-4 block rounded-lg px-3 py-2 text-sm text-gray-500 hover:bg-gray-50"
-                    onClick={() => setMobileOpen(false)}
-                  >
-                    {child.name}
-                  </Link>
-                ))}
+                  <NavLink cat={cat} className="block" />
+                </div>
+                {!cat.url &&
+                  children.map((child) => (
+                    <div
+                      key={child.id}
+                      className="ml-4"
+                      onClick={() => setMobileOpen(false)}
+                    >
+                      <NavLink
+                        cat={child}
+                        className="block rounded-lg px-3 py-2 text-sm text-gray-500 hover:bg-gray-50"
+                      />
+                    </div>
+                  ))}
               </div>
             );
           })}

@@ -1,6 +1,7 @@
 import { Elysia, t } from 'elysia';
 import { pageBlockService } from '../services/page-block.service';
 import { authBeforeHandle } from '../middleware/auth';
+import { revalidateFrontend } from '../lib/revalidate';
 
 const S = (ctx: unknown) => ctx as Record<string, unknown>;
 
@@ -14,6 +15,7 @@ export const pageBlockRoutes = new Elysia({ prefix: '/api/page-blocks' })
   })
   .guard({ beforeHandle: [authBeforeHandle] }, (app) =>
     app
+      .onAfterResponse(() => { revalidateFrontend(); })
       .post('/', async (ctx) => {
         const b = S(ctx).body as Record<string, unknown>;
         b.siteId = S(ctx).siteId as number;
@@ -39,7 +41,8 @@ export const pageBlockRoutes = new Elysia({ prefix: '/api/page-blocks' })
         return pageBlockService.delete(Number((S(ctx).params as Record<string, string>).id));
       })
       .post('/reorder', async (ctx) => {
-        return pageBlockService.reorder((S(ctx).body as { items: { id: number; sortOrder: number }[] }).items);
+        await pageBlockService.reorder((S(ctx).body as { items: { id: number; sortOrder: number }[] }).items);
+        return { success: true };
       }, {
         body: t.Object({ items: t.Array(t.Object({ id: t.Number(), sortOrder: t.Number() })) }),
       })

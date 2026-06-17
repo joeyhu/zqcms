@@ -12,7 +12,7 @@ export function SiteFormPage() {
   const [form, setForm] = useState<Record<string, string>>({
     name: '', slug: '', domain: '', description: '', primaryColor: '#3B82F6',
     contactEmail: '', contactPhone: '', address: '',
-    logo: '', favicon: '', footerText: '', copyright: '', gaId: '',
+    logo: '', favicon: '', footerText: '', copyright: '', gaId: '', icp: '',
   });
 
   useEffect(() => {
@@ -117,7 +117,7 @@ export function SiteFormPage() {
         <div className="rounded-xl border bg-white p-6 space-y-4">
           <h2 className="font-semibold text-lg">页脚与分析</h2>
           <div className="grid gap-4 sm:grid-cols-2">
-            {[['footerText', '页脚文案'], ['copyright', '版权信息'], ['gaId', 'Google Analytics ID']]
+            {[['footerText', '页脚文案'], ['copyright', '版权信息'], ['gaId', 'Google Analytics ID'], ['icp', 'ICP 备案号']]
               .map(([key, label]) => (
                 <div key={key}>
                   <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>

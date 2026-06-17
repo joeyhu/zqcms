@@ -5,10 +5,13 @@ interface PostListProps {
   posts: Post[];
   layout?: 'grid' | 'list';
   columns?: number;
+  cardClass?: string;
+  isLightText?: boolean;
+  gridClass?: string;
   emptyMessage?: string;
 }
 
-export function PostList({ posts, layout = 'grid', columns = 3, emptyMessage }: PostListProps) {
+export function PostList({ posts, layout = 'grid', columns = 3, cardClass, isLightText, gridClass, emptyMessage }: PostListProps) {
   if (posts.length === 0) {
     return (
       <div className="py-12 text-center text-gray-400">
@@ -21,23 +24,18 @@ export function PostList({ posts, layout = 'grid', columns = 3, emptyMessage }: 
     return (
       <div className="divide-y">
         {posts.map((post) => (
-          <PostCard key={post.id} post={post} />
+          <PostCard key={post.id} post={post} cardClass={cardClass} isLightText={isLightText} />
         ))}
       </div>
     );
   }
 
-  const gridCols = {
-    1: 'grid-cols-1',
-    2: 'grid-cols-1 md:grid-cols-2',
-    3: 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3',
-    4: 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4',
-  };
+  const grid = gridClass || `grid-cols-1 md:grid-cols-2 lg:grid-cols-${Math.min(columns, 4)}`;
 
   return (
-    <div className={`grid gap-6 ${gridCols[columns as keyof typeof gridCols] || gridCols[3]}`}>
+    <div className={`grid gap-6 ${grid}`}>
       {posts.map((post) => (
-        <PostCard key={post.id} post={post} />
+        <PostCard key={post.id} post={post} cardClass={cardClass} isLightText={isLightText} />
       ))}
     </div>
   );

@@ -1,14 +1,19 @@
 import { useEffect, useState, useRef } from 'react';
-import { Upload, Trash2, Copy, Image as ImageIcon } from 'lucide-react';
+import { Upload, Trash2, Copy, Image as ImageIcon, Eye, X } from 'lucide-react';
 import { fetchAPI, uploadFile } from '@/lib/api-client';
 import type { Media, PaginatedResponse } from '@zqcms/shared/types';
+import { useConfirm } from '@/components/ui/ConfirmDialog';
 import toast from 'react-hot-toast';
+
+const API_ORIGIN = 'http://localhost:11003';
 
 export function MediaPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const confirm = useConfirm();
   const [media, setMedia] = useState<Media[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   const loadMedia = async () => {
     setLoading(true);
@@ -44,7 +49,8 @@ export function MediaPage() {
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('确定删除该文件？')) return;
+    const ok = await confirm({ title: '删除文件', message: '确定删除该文件？', danger: true });
+    if (!ok) return;
     try {
       await fetchAPI(`/media/${id}`, { method: 'DELETE' });
       toast.success('已删除');
@@ -55,9 +61,9 @@ export function MediaPage() {
   };
 
   const copyUrl = (url: string) => {
-    const fullUrl = `http://localhost:11003${url}`;
-    navigator.clipboard.writeText(fullUrl);
-    toast.success('链接已复制');
+    // 只复制路径部分，不含域名（适配多域名发布）
+    navigator.clipboard.writeText(url);
+    toast.success('路径已复制');
   };
 
   return (
@@ -95,7 +101,7 @@ export function MediaPage() {
               <div className="relative aspect-square overflow-hidden rounded-lg bg-gray-100">
                 {item.mimeType.startsWith('image/') ? (
                   <img
-                    src={`http://localhost:11003${item.url}`}
+                    src={`${API_ORIGIN}${item.url}`}
                     alt={item.altText || item.filename}
                     className="h-full w-full object-cover"
                   />
@@ -105,10 +111,25 @@ export function MediaPage() {
                   </div>
                 )}
                 <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/0 group-hover:bg-black/30 transition-colors opacity-0 group-hover:opacity-100">
-                  <button onClick={() => copyUrl(item.url)} className="rounded-lg bg-white/90 p-2 text-gray-700 hover:bg-white">
+                  <button
+                    onClick={() => setPreviewUrl(`${API_ORIGIN}${item.url}`)}
+                    className="rounded-lg bg-white/90 p-2 text-gray-700 hover:bg-white"
+                    title="查看原图"
+                  >
+                    <Eye className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => copyUrl(item.url)}
+                    className="rounded-lg bg-white/90 p-2 text-gray-700 hover:bg-white"
+                    title="复制路径"
+                  >
                     <Copy className="h-4 w-4" />
                   </button>
-                  <button onClick={() => handleDelete(item.id)} className="rounded-lg bg-red-500/90 p-2 text-white hover:bg-red-500">
+                  <button
+                    onClick={() => handleDelete(item.id)}
+                    className="rounded-lg bg-red-500/90 p-2 text-white hover:bg-red-500"
+                    title="删除"
+                  >
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
@@ -116,6 +137,23 @@ export function MediaPage() {
               <p className="mt-2 truncate px-1 text-xs text-gray-500">{item.filename}</p>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Full Image Preview Modal */}
+      {previewUrl && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+          <button
+            onClick={() => setPreviewUrl(null)}
+            className="absolute top-4 right-4 rounded-full bg-white/10 p-2 text-white hover:bg-white/20 transition-colors"
+          >
+            <X className="h-5 w-5" />
+          </button>
+          <img
+            src={previewUrl}
+            alt="预览"
+            className="max-h-[90vh] max-w-[90vw] rounded-lg object-contain shadow-2xl"
+          />
         </div>
       )}
     </div>

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Plus, Edit3, Trash2, Globe, ExternalLink } from 'lucide-react';
 import { fetchAPI, setCurrentSiteId } from '@/lib/api-client';
+import { useConfirm } from '@/components/ui/ConfirmDialog';
 import toast from 'react-hot-toast';
 
 interface SiteItem {
@@ -16,6 +17,7 @@ interface SiteItem {
 
 export function SitesPage() {
   const navigate = useNavigate();
+  const confirm = useConfirm();
   const [sites, setSites] = useState<SiteItem[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -34,7 +36,8 @@ export function SitesPage() {
   useEffect(() => { loadSites(); }, []);
 
   const handleDelete = async (id: number, name: string) => {
-    if (!confirm(`确定删除站点「${name}」？所有文章、分类、媒体将被永久删除！`)) return;
+    const ok = await confirm({ title: '删除站点', message: `确定删除站点「${name}」？所有文章、分类、媒体将被永久删除！`, danger: true, confirmText: '永久删除' });
+    if (!ok) return;
     try {
       await fetchAPI(`/sites/${id}`, { method: 'DELETE' });
       toast.success('已删除');

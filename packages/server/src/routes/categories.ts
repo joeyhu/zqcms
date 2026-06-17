@@ -2,6 +2,7 @@ import { Elysia, t } from 'elysia';
 import { categoryService } from '../services/category.service';
 import { pageBlockService } from '../services/page-block.service';
 import { authBeforeHandle } from '../middleware/auth';
+import { revalidateFrontend } from '../lib/revalidate';
 
 function sid(ctx: unknown): number {
   return (ctx as Record<string, unknown>).siteId as number;
@@ -30,6 +31,9 @@ export const categoryRoutes = new Elysia({ prefix: '/api/categories' })
     }
     return pageBlockService.getForCategory(sid(ctx), slug);
   })
+  .get('/by-id/:id', async (ctx) => {
+    return categoryService.getById(Number((ctx as { params: Record<string, string> }).params.id));
+  })
   .get('/:slug', async (ctx) => {
     const c = ctx as { query: Record<string, string>; params: Record<string, string> };
     if (c.query.withPosts === 'true') return categoryService.getWithPosts(sid(ctx), c.params.slug);
@@ -37,6 +41,9 @@ export const categoryRoutes = new Elysia({ prefix: '/api/categories' })
   })
   .guard({ beforeHandle: [authBeforeHandle] }, (app) =>
     app
+      .onAfterResponse(() => {
+        revalidateFrontend(); // 变更后通知前端刷新（fire-and-forget）
+      })
       .post('/', async (ctx) => {
         const b = (ctx as { body: Record<string, unknown> }).body as Record<string, unknown>;
         b.siteId = sid(ctx);
@@ -45,6 +52,7 @@ export const categoryRoutes = new Elysia({ prefix: '/api/categories' })
         body: t.Object({
           name: t.String(), slug: t.String(),
           description: t.Optional(t.Nullable(t.String())), icon: t.Optional(t.Nullable(t.String())),
+          url: t.Optional(t.Nullable(t.String())),
           sortOrder: t.Optional(t.Number()), isVisible: t.Optional(t.Boolean()),
           parentId: t.Optional(t.Nullable(t.Number())),
         }),
@@ -55,6 +63,7 @@ export const categoryRoutes = new Elysia({ prefix: '/api/categories' })
         body: t.Object({
           name: t.Optional(t.String()), slug: t.Optional(t.String()),
           description: t.Optional(t.Nullable(t.String())), icon: t.Optional(t.Nullable(t.String())),
+          url: t.Optional(t.Nullable(t.String())),
           sortOrder: t.Optional(t.Number()), isVisible: t.Optional(t.Boolean()),
           parentId: t.Optional(t.Nullable(t.Number())),
         }),
@@ -63,7 +72,8 @@ export const categoryRoutes = new Elysia({ prefix: '/api/categories' })
         return categoryService.delete(Number((ctx as { params: Record<string, string> }).params.id));
       })
       .post('/reorder', async (ctx) => {
-        return categoryService.reorder((ctx as { body: { items: { id: number; sortOrder: number }[] } }).body.items);
+        await categoryService.reorder((ctx as { body: { items: { id: number; sortOrder: number }[] } }).body.items);
+        return { success: true };
       }, {
         body: t.Object({ items: t.Array(t.Object({ id: t.Number(), sortOrder: t.Number() })) }),
       })

@@ -4,6 +4,8 @@ import type { Category } from '@zqcms/shared/types';
 import { Header } from '@/components/site/header';
 import { Footer } from '@/components/site/footer';
 import { SiteSwitcher } from '@/components/site/site-switcher';
+import { Breadcrumb } from '@/components/site/breadcrumb';
+import { BreadcrumbWrapper } from '@/components/site/breadcrumb-wrapper';
 
 async function getSiteData(): Promise<{
   settings: SiteSettings;
@@ -21,7 +23,8 @@ async function getSiteData(): Promise<{
         id: 0, siteName: 'ZQCMS', siteDescription: null,
         logo: null, favicon: null, primaryColor: '#3B82F6',
         contactEmail: null, contactPhone: null, address: null,
-        socialLinks: null, footerText: null, copyright: null, gaId: null,
+        socialLinks: null, footerText: null, copyright: null, gaId: null, icp: null,
+        socialQRCodes: null,
         createdAt: '', updatedAt: '',
       } as SiteSettings,
       categories: [],
@@ -35,6 +38,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
   return (
     <div className="flex min-h-screen flex-col">
       <Header settings={settings} categories={categories} />
+      <BreadcrumbWrapper categories={categories} />
       <main className="flex-1">{children}</main>
       <Footer settings={settings} />
       <SiteSwitcher />
