@@ -42,7 +42,7 @@ export function DashboardPage() {
     { label: '文章', count: stats.posts, icon: FileText, to: '/posts', color: 'text-blue-600', bg: 'bg-blue-50' },
     { label: '目录', count: stats.categories, icon: FolderTree, to: '/categories', color: 'text-green-600', bg: 'bg-green-50' },
     { label: '媒体', count: stats.media, icon: Image, to: '/media', color: 'text-purple-600', bg: 'bg-purple-50' },
-    { label: '首页区块', count: stats.blocks, icon: Blocks, to: '/pages/home', color: 'text-orange-600', bg: 'bg-orange-50' },
+    { label: '标签', count: stats.tags, icon: Tag, to: '/tags', color: 'text-orange-600', bg: 'bg-orange-50' },
   ];
 
   return (
