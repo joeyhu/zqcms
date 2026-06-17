@@ -24,7 +24,7 @@ export default async function TagListPage() {
     <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6">
       {/* Header */}
       <div className="mb-10 text-center">
-        <div className="inline-flex items-center justify-center h-14 w-14 rounded-2xl bg-gradient-to-br from-amber-500 to-rose-500 mb-4">
+        <div className="inline-flex items-center justify-center h-14 w-14 rounded-xl bg-gradient-to-br from-amber-500 to-rose-500 mb-4">
           <Hash className="h-7 w-7 text-white" />
         </div>
         <h1 className="text-3xl font-bold text-gray-900">标签</h1>

@@ -55,16 +55,6 @@ export async function fetchAPI<T>(endpoint: string, options: FetchOptions = {}):
 }
 
 // Shared types for web
-export interface PageBlock {
-  id: number;
-  pageType: string;
-  blockType: string;
-  title: string | null;
-  config: Record<string, unknown>;
-  sortOrder: number;
-  isVisible: boolean;
-}
-
 export interface SiteContext {
   id: number;
   name: string;

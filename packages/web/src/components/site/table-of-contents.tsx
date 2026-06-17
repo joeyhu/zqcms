@@ -144,7 +144,7 @@ export function TableOfContents({ items }: TableOfContentsProps) {
       {/*  Inline TOC — between ArticleHeader and content body             */}
       {/* ================================================================ */}
       <div ref={inlineRef}>
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 mb-6">
+        <div className="bg-white rounded-lg border border-gray-100 shadow-sm p-5 mb-6">
           <TocNav />
         </div>
       </div>
@@ -157,7 +157,7 @@ export function TableOfContents({ items }: TableOfContentsProps) {
           <div
             className={`
               sticky top-20 max-h-[calc(100vh-7rem)] overflow-y-auto
-              rounded-xl border border-gray-100 bg-white shadow-lg p-4
+              rounded-lg border border-gray-100 bg-white shadow-lg p-4
               transition-all duration-300 ease-out
               ${
                 showSticky
@@ -192,7 +192,7 @@ export function TableOfContents({ items }: TableOfContentsProps) {
 
         <div
           className={`
-            fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-2xl shadow-2xl
+            fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-xl shadow-2xl
             transition-transform duration-300 ease-out
             max-h-[70vh] overflow-y-auto p-5
             ${isOpen ? "translate-y-0" : "translate-y-full"}

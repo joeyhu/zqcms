@@ -2,8 +2,6 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { fetchAPI } from "@/lib/api-client";
 import type { Category, Post } from "@zqcms/shared/types";
-import type { PageBlock } from "@zqcms/shared/types";
-import { PageBlockRenderer } from "@/components/site/blocks";
 import { MarkdownRenderer } from "@/components/site/markdown-renderer";
 import { PostList } from "@/components/site/post-list";
 import { ArticleHeader } from "@/components/site/article-header";
@@ -13,9 +11,11 @@ import { CategoryHeader } from "@/components/site/category-header";
 import { SubCategoryList } from "@/components/site/sub-category-list";
 import { TableOfContents } from "@/components/site/table-of-contents";
 import { parseTocFromMarkdown } from "@/lib/toc";
+import { Pagination } from "@/components/site/pagination";
 
 interface PageProps {
   params: Promise<{ slug: string[] }>;
+  searchParams: Promise<{ page?: string }>;
 }
 
 export async function generateMetadata({
@@ -66,90 +66,50 @@ export async function generateMetadata({
 // ============================================================
 function CategoryFallbackLayout({
   category,
+  page,
+  pageSize,
+  totalPosts,
 }: {
   category: Category & { posts?: Post[] };
+  page: number;
+  pageSize: number;
+  totalPosts: number;
 }) {
   const posts = category.posts || [];
   const children = category.children || [];
-  const pinnedPosts = posts.filter((p) => p.isPinned);
-  const regularPosts = posts.filter((p) => !p.isPinned);
+  const totalPages = Math.max(1, Math.ceil(totalPosts / pageSize));
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       <CategoryHeader category={category} />
 
-      {/* Sub-category list (display first, only if available) */}
+      {/* Sub-category list */}
       <SubCategoryList categories={children} />
 
-      {/* Pinned / Featured Posts */}
-      {pinnedPosts.length > 0 && (
-        <section className="mb-12">
-          <div className="mb-4 flex items-center gap-2">
-            <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700 border border-amber-200">
-              <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-              </svg>
-              置顶
-            </span>
-            <h2 className="text-sm font-medium text-gray-500">精选内容</h2>
-          </div>
-          <PostList posts={pinnedPosts} layout="grid" columns={2} />
-        </section>
-      )}
-
-      {/* Regular Posts */}
-      {regularPosts.length > 0 ? (
+      {/* Post list */}
+      {posts.length > 0 ? (
         <section>
-          {/* Section heading — only needed when there is preceding content (pinned or sub-categories) */}
-          {pinnedPosts.length > 0 ? (
-            <div className="mb-6 flex items-center gap-3">
-              <div className="flex-1 h-px bg-gray-100" />
-              <h2 className="text-sm font-medium text-gray-400">全部文章</h2>
-              <div className="flex-1 h-px bg-gray-100" />
-            </div>
-          ) : children.length > 0 ? (
-            <div className="mb-5 flex items-center gap-2">
-              <h2 className="text-lg font-semibold text-gray-800">全部文章</h2>
-              <span className="text-sm text-gray-400">
-                ({regularPosts.length})
-              </span>
-            </div>
-          ) : null}
-
+          <div className="mb-5 flex items-center gap-2">
+            <h2 className="text-lg font-semibold text-gray-800">全部文章</h2>
+            <span className="text-sm text-gray-400">({totalPosts})</span>
+          </div>
           <PostList
-            posts={regularPosts}
+            posts={posts}
             layout="grid"
             columns={2}
-            emptyMessage="该分类下暂无文章"
           />
+          <Pagination currentPage={page} totalPages={totalPages} />
         </section>
       ) : (
-        /* Empty state — only show when truly empty (no posts, no children) */
-        children.length === 0 && (
-          <div className="py-20 text-center">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-100">
-              <svg
-                className="h-8 w-8 text-gray-300"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1.5}
-                  d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"
-                />
-              </svg>
-            </div>
-            <p className="text-lg font-medium text-gray-500">
-              该分类下暂无文章
-            </p>
-            <p className="mt-1 text-sm text-gray-400">
-              请稍后再来，或浏览其他分类
-            </p>
+        <div className="py-20 text-center">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-lg bg-gray-100">
+            <svg className="h-8 w-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+            </svg>
           </div>
-        )
+          <p className="text-lg font-medium text-gray-500">该分类下暂无文章</p>
+          <p className="mt-1 text-sm text-gray-400">请稍后再来，或浏览其他分类</p>
+        </div>
       )}
     </div>
   );
@@ -184,7 +144,7 @@ async function ArticleDetailPage({ post }: { post: Post }) {
           {tocItems.length > 0 && <TableOfContents items={tocItems} />}
 
           {/* Post Content */}
-          <div className="bg-white rounded-2xl border border-gray-100 px-6 py-8 sm:px-10 sm:py-10 shadow-sm">
+          <div className="bg-white rounded-lg border border-gray-100 px-6 py-8 sm:px-10 sm:py-10 shadow-sm">
             <MarkdownRenderer content={post.content} />
           </div>
 
@@ -236,8 +196,9 @@ async function ArticleDetailPage({ post }: { post: Post }) {
 // URL routing rules:
 //   Last segment is numeric → Article page  (/42, /docs/42, /docs/guide/42)
 //   Otherwise              → Category page (/docs, /docs/guide)
-export default async function CatchAllPage({ params }: PageProps) {
+export default async function CatchAllPage({ params, searchParams }: PageProps) {
   const { slug } = await params;
+  const { page: pageStr } = await searchParams;
   const lastSegment = slug[slug.length - 1];
   const isNumericId = /^\d+$/.test(lastSegment);
 
@@ -253,27 +214,29 @@ export default async function CatchAllPage({ params }: PageProps) {
 
   // ── Category page ──
   const fullSlug = slug.join("/");
-  const [blocks, category] = await Promise.all([
-    fetchAPI<PageBlock[]>(
-      `/categories/blocks?slug=${encodeURIComponent(fullSlug)}`,
-    ).catch(() => [] as PageBlock[]),
-    fetchAPI<(Category & { posts: Post[] }) | null>(
-      `/categories/${fullSlug}?withPosts=true`,
-    ).catch(() => null),
-  ]);
+  const page = Math.max(1, parseInt(pageStr || '1') || 1);
+  const pageSize = 20;
+
+  const category = await fetchAPI<
+    | (Category & {
+        posts?: Post[];
+        _page?: number;
+        _pageSize?: number;
+        _totalPosts?: number;
+      })
+    | null
+  >(
+    `/categories/${fullSlug}?withPosts=true&includeDescendants=true&page=${page}&pageSize=${pageSize}`,
+  ).catch(() => null);
 
   if (!category) notFound();
 
-  const visibleBlocks = blocks.filter((b: PageBlock) => b.isVisible);
-  if (visibleBlocks.length > 0) {
-    return (
-      <>
-        {visibleBlocks.map((block) => (
-          <PageBlockRenderer key={block.id} block={block} />
-        ))}
-      </>
-    );
-  }
-
-  return <CategoryFallbackLayout category={category} />;
+  return (
+    <CategoryFallbackLayout
+      category={category}
+      page={category._page || page}
+      pageSize={category._pageSize || pageSize}
+      totalPosts={category._totalPosts || category.posts?.length || 0}
+    />
+  );
 }

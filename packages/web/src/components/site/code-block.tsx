@@ -249,7 +249,7 @@ export function CodeBlock({ children }: { children: React.ReactNode }) {
   }, [rawCode, language]);
 
   return (
-    <div className="my-5 rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+    <div className="my-5 rounded-lg border border-gray-200 overflow-hidden shadow-sm">
       {/* Header bar */}
       <div className="flex items-center justify-between bg-gray-800 px-4 py-2.5">
         <span className="text-xs font-medium text-gray-300 tracking-wide uppercase">

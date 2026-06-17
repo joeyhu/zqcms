@@ -6,15 +6,11 @@ import {
   FolderTree,
   Settings,
   Image,
-  Blocks,
   LogOut,
   Globe,
   ChevronDown,
   Plus,
   Wrench,
-  FolderOpen,
-  Layers,
-  Layout,
   Grid3X3,
   Tags,
   Bot,
@@ -29,11 +25,6 @@ const navItems = [
   { to: "/categories", icon: FolderTree, label: "目录管理" },
   { to: "/posts", icon: FileText, label: "文章管理" },
   { to: "/tags", icon: Tags, label: "标签管理" },
-  { to: "/pages/home", icon: Blocks, label: "首页搭建" },
-  { to: "/pages/category", icon: FolderOpen, label: "目录页模板" },
-  { to: "/pages/subcategory", icon: Layers, label: "子目录页模板" },
-  { to: "/cards", icon: Layout, label: "卡片管理" },
-  { to: "/blocks", icon: Blocks, label: "区块管理" },
   { to: "/icons", icon: Grid3X3, label: "图标管理" },
   { to: "/media", icon: Image, label: "媒体库" },
   { to: "/settings", icon: Settings, label: "站点配置" },
@@ -105,7 +96,7 @@ export function AdminLayout() {
       {/* Sidebar */}
       <aside className="flex w-56 flex-col border-r bg-white">
         <div className="flex h-14 items-center gap-2 border-b px-4">
-          <Blocks className="h-5 w-5 text-blue-600" />
+          <LayoutDashboard className="h-5 w-5 text-blue-600" />
           <span className="font-bold text-lg text-gray-900">ZQCMS</span>
         </div>
 

@@ -21,6 +21,9 @@ export const postRoutes = new Elysia({ prefix: '/api/posts' })
       tagSlug: q.tagSlug || undefined,
       page: q.page ? Number(q.page) : 1,
       pageSize: q.pageSize ? Number(q.pageSize) : 20,
+      orderBy: (q.orderBy as 'publishedAt' | 'viewCount' | 'sortOrder') || undefined,
+      orderDir: (q.orderDir as 'asc' | 'desc') || undefined,
+      includeDescendants: q.includeDescendants === 'true',
     });
   })
   .get('/featured', async (ctx) => {

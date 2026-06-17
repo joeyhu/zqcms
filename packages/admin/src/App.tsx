@@ -10,16 +10,11 @@ import { CategoryListPage } from './pages/CategoryListPage';
 import { CategoryFormPage } from './pages/CategoryFormPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { MediaPage } from './pages/MediaPage';
-import { PageBuilderPage } from './pages/PageBuilderPage';
-import { SitesPage } from './pages/SitesPage';
-import { SiteFormPage } from './pages/SiteFormPage';
 import { TagListPage } from './pages/TagListPage';
 import { TagFormPage } from './pages/TagFormPage';
-import { CardTemplateListPage } from './pages/CardTemplateListPage';
-import { CardTemplateFormPage } from './pages/CardTemplateFormPage';
-import { BlockTemplateListPage } from './pages/BlockTemplateListPage';
-import { BlockTemplateFormPage } from './pages/BlockTemplateFormPage';
 import { IconListPage } from './pages/IconListPage';
+import { SitesPage } from './pages/SitesPage';
+import { SiteFormPage } from './pages/SiteFormPage';
 import { LlmConfigPage } from './pages/LlmConfigPage';
 import { PublishPlatformPage } from './pages/PublishPlatformPage';
 
@@ -52,9 +47,6 @@ export function App() {
           <Route path="categories" element={<CategoryListPage />} />
           <Route path="categories/new" element={<CategoryFormPage />} />
           <Route path="categories/:id/edit" element={<CategoryFormPage />} />
-          <Route path="pages/home" element={<PageBuilderPage />} />
-          <Route path="pages/category" element={<PageBuilderPage />} />
-          <Route path="pages/subcategory" element={<PageBuilderPage />} />
           <Route path="settings" element={<SettingsPage />} />
           <Route path="settings/llm" element={<LlmConfigPage />} />
           <Route path="publish" element={<PublishPlatformPage />} />
@@ -65,12 +57,6 @@ export function App() {
           <Route path="tags" element={<TagListPage />} />
           <Route path="tags/new" element={<TagFormPage />} />
           <Route path="tags/:id/edit" element={<TagFormPage />} />
-          <Route path="cards" element={<CardTemplateListPage />} />
-          <Route path="cards/new" element={<CardTemplateFormPage />} />
-          <Route path="cards/:id/edit" element={<CardTemplateFormPage />} />
-          <Route path="blocks" element={<BlockTemplateListPage />} />
-          <Route path="blocks/new" element={<BlockTemplateFormPage />} />
-          <Route path="blocks/:id/edit" element={<BlockTemplateFormPage />} />
           <Route path="icons" element={<IconListPage />} />
         </Route>
       </Routes>

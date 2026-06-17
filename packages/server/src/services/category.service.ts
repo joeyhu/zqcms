@@ -40,18 +40,60 @@ export const categoryService = {
     });
   },
 
-  async getWithPosts(siteId: number, slug: string) {
-    return prisma.category.findUnique({
+  async getWithPosts(
+    siteId: number,
+    slug: string,
+    options?: {
+      page?: number;
+      pageSize?: number;
+      includeDescendants?: boolean;
+    },
+  ) {
+    const { page = 1, pageSize = 20, includeDescendants = false } = options || {};
+    const skip = (page - 1) * pageSize;
+
+    // Build post filter
+    const postWhere: Record<string, unknown> = { status: 'PUBLISHED' as never };
+    if (includeDescendants) {
+      // Get all descendant category IDs by slug pattern
+      const allIds = await prisma.category.findMany({
+        where: {
+          siteId,
+          OR: [
+            { slug },
+            { slug: { startsWith: slug + '/' } },
+          ],
+        },
+        select: { id: true },
+      });
+      postWhere.categoryId = { in: allIds.map(c => c.id) };
+    }
+
+    const category = await prisma.category.findUnique({
       where: { siteId_slug: { siteId, slug } },
       include: {
         children: { orderBy: { sortOrder: 'asc' } },
         posts: {
-          where: { status: 'PUBLISHED' as never },
+          where: postWhere as never,
           include: { tags: { include: { tag: true } } },
           orderBy: [{ sortOrder: 'asc' }, { publishedAt: 'desc' }],
+          skip,
+          take: pageSize,
+        },
+        _count: {
+          select: { posts: { where: postWhere as never } },
         },
       },
     });
+
+    if (!category) return null;
+
+    return {
+      ...category,
+      _page: page,
+      _pageSize: pageSize,
+      _totalPosts: category._count?.posts ?? 0,
+    };
   },
 
   async create(data: { siteId: number; name: string; slug: string; description?: string | null; icon?: string | null; sortOrder?: number; isVisible?: boolean; parentId?: number | null }) {

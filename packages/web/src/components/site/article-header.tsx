@@ -12,10 +12,10 @@ export function ArticleHeader({ post }: ArticleHeaderProps) {
   const category = post.category as Category | null | undefined;
 
   return (
-    <header className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 mb-10">
+    <header className="relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 mb-10">
       {/* Cover Image */}
       {post.coverImage && (
-        <div className="relative w-full overflow-hidden rounded-t-2xl" style={{ maxHeight: '420px' }}>
+        <div className="relative w-full overflow-hidden rounded-t-xl" style={{ maxHeight: '420px' }}>
           <img
             src={post.coverImage}
             alt={post.title}

@@ -10,10 +10,10 @@ export function AuthorCard({ author, postCount }: AuthorCardProps) {
   const displayName = author.name || author.email;
 
   return (
-    <div className="mt-12 rounded-2xl border border-gray-100 bg-gradient-to-br from-gray-50 to-white p-6 sm:p-8">
+    <div className="mt-12 rounded-xl border border-gray-100 bg-gradient-to-br from-gray-50 to-white p-6 sm:p-8">
       <div className="flex items-start gap-4 sm:gap-5">
         {/* Avatar */}
-        <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/20">
+        <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/20">
           {author.name ? (
             <span className="text-xl font-bold">{displayName.charAt(0).toUpperCase()}</span>
           ) : (

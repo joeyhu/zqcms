@@ -35,9 +35,6 @@ model Site {
 
   categories    Category[]
   posts         Post[]
-  pageBlocks    PageBlock[]
-  cardTemplates CardTemplate[]
-  blockTemplates BlockTemplate[]
   media        Media[]
 
   @@index([domain])
@@ -147,80 +144,6 @@ model PostTag {
   tag    Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
 
   @@id([postId, tagId])
-}
-
-// ==========================================
-// 首页区块（加 siteId）
-// ==========================================
-model PageBlock {
-  id        Int       @id @default(autoincrement())
-  siteId    Int // 所属站点
-  site      Site      @relation(fields: [siteId], references: [id], onDelete: Cascade)
-  pageType  String
-  blockType BlockType
-  title     String?
-  config    Json      @default("{}")
-  sortOrder Int       @default(0)
-  isVisible Boolean   @default(true)
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-
-  @@index([siteId, pageType, sortOrder])
-}
-
-enum BlockType {
-  HERO
-  FEATURES
-  CTA
-  POST_LIST
-  CATEGORY_LIST
-  TAG_LIST
-  CARD_GRID
-  FAQ
-  MARKDOWN
-  TESTIMONIALS
-  CONTACT
-  DIVIDER
-}
-
-// ==========================================
-// 卡片模板
-// ==========================================
-model CardTemplate {
-  id          Int      @id @default(autoincrement())
-  siteId      Int
-  site        Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
-  name        String
-  description String?  @db.Text
-  isPreset    Boolean  @default(false)
-  config      Json     @default("{}")
-  sortOrder   Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  blockTemplates BlockTemplate[]
-
-  @@index([siteId])
-}
-
-// ==========================================
-// 区块模板
-// ==========================================
-model BlockTemplate {
-  id              Int            @id @default(autoincrement())
-  siteId          Int
-  site            Site           @relation(fields: [siteId], references: [id], onDelete: Cascade)
-  name            String
-  description     String?        @db.Text
-  cardTemplateId  Int?
-  cardTemplate    CardTemplate?  @relation(fields: [cardTemplateId], references: [id], onDelete: SetNull)
-  contentSource   String                           // subcategories|articles|tags|all_categories|all_articles
-  columns         Json           @default("{\"desktop\":3,\"tablet\":2,\"mobile\":1}")
-  isPreset        Boolean        @default(false)
-  sortOrder       Int            @default(0)
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
-
-  @@index([siteId])
 }
 
 // ==========================================

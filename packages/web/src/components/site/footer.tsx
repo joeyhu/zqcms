@@ -11,11 +11,11 @@ function QrCodeButton({ name, imgUrl }: { name: string; imgUrl: string }) {
       </span>
       {/* Popup */}
       <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 pointer-events-none">
-        <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-2xl shadow-gray-300/50 min-w-[200px]">
+        <div className="rounded-lg border border-gray-100 bg-white p-5 shadow-2xl shadow-gray-300/50 min-w-[200px]">
           <img
             src={imgUrl}
             alt={name}
-            className="h-56 w-56 rounded-xl object-contain bg-gray-50"
+            className="h-56 w-56 rounded-lg object-contain bg-gray-50"
           />
           <p className="mt-3 text-center text-sm font-medium text-gray-500">{name}</p>
         </div>

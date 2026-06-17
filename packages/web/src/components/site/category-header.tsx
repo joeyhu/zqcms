@@ -1,5 +1,6 @@
 import type { Category } from '@zqcms/shared/types';
 import { FolderOpen, ChevronRight } from 'lucide-react';
+import { getIconComponent } from '@/lib/icon';
 
 interface CategoryHeaderProps {
   category: Category & { posts?: { id: number }[] };
@@ -7,9 +8,10 @@ interface CategoryHeaderProps {
 
 export function CategoryHeader({ category }: CategoryHeaderProps) {
   const postCount = category._count?.posts ?? category.posts?.length ?? 0;
+  const IconComp = getIconComponent(category.icon);
 
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-800 via-blue-900 to-indigo-900 mb-8">
+    <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-800 via-blue-900 to-indigo-900 mb-8">
       {/* Decorative pattern */}
       <div className="absolute inset-0 opacity-[0.04]"
         style={{
@@ -32,15 +34,9 @@ export function CategoryHeader({ category }: CategoryHeaderProps) {
 
         {/* Icon + Title */}
         <div className="flex items-center gap-4">
-          {category.icon ? (
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10 text-white backdrop-blur-sm">
-              <span className="text-2xl">{category.icon}</span>
-            </div>
-          ) : (
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10 text-white backdrop-blur-sm">
-              <FolderOpen className="h-7 w-7" />
-            </div>
-          )}
+          <div className="flex h-14 w-14 items-center justify-center rounded-lg bg-white/10 text-white backdrop-blur-sm">
+            <IconComp className="h-7 w-7" />
+          </div>
 
           <div>
             <h1 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">

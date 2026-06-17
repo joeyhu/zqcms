@@ -8,7 +8,7 @@ interface TagHeaderProps {
 
 export function TagHeader({ tag, postCount }: TagHeaderProps) {
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-600 via-orange-500 to-rose-500 mb-8">
+    <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-amber-600 via-orange-500 to-rose-500 mb-8">
       {/* Decorative pattern */}
       <div className="absolute inset-0 opacity-[0.06]"
         style={{

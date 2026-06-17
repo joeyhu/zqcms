@@ -82,7 +82,7 @@ export function SiteSwitcher() {
 
   return (
     <div className="fixed bottom-4 right-4 z-50">
-      <div className="rounded-xl border border-gray-200 bg-white/95 shadow-lg backdrop-blur p-3">
+      <div className="rounded-lg border border-gray-200 bg-white/95 shadow-lg backdrop-blur p-3">
         <div className="flex items-center gap-2">
           <span className="text-xs text-gray-400 whitespace-nowrap">当前站点:</span>
           <select

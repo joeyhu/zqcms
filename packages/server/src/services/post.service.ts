@@ -11,18 +11,68 @@ export const postService = {
     tagSlug?: string;
     page?: number;
     pageSize?: number;
+    /** Sort field: publishedAt (default), viewCount, sortOrder */
+    orderBy?: 'publishedAt' | 'viewCount' | 'sortOrder';
+    /** Sort direction: desc (default), asc */
+    orderDir?: 'asc' | 'desc';
+    /** When true and categorySlug is set, include posts from all descendant categories */
+    includeDescendants?: boolean;
   }) {
-    const { siteId, categorySlug, status, featured, search, tagId, tagSlug, page = 1, pageSize = 20 } = params;
+    const {
+      siteId,
+      categorySlug,
+      status,
+      featured,
+      search,
+      tagId,
+      tagSlug,
+      page = 1,
+      pageSize = 20,
+      orderBy = 'publishedAt',
+      orderDir = 'desc',
+      includeDescendants = false,
+    } = params;
     const skip = (page - 1) * pageSize;
 
     const where: Record<string, unknown> = {};
     if (siteId) where.siteId = siteId;
     if (status) where.status = status;
     if (featured !== undefined) where.isFeatured = featured;
+
+    // Handle category + descendants
     if (categorySlug) {
-      const category = await prisma.category.findFirst({ where: { slug: categorySlug, siteId } });
-      if (category) where.categoryId = category.id;
+      if (includeDescendants) {
+        // Find all descendant categories by slug pattern: slug starts with "categorySlug/"
+        // or equals categorySlug (the category itself)
+        const allCategoryIds = await prisma.category.findMany({
+          where: {
+            siteId,
+            OR: [
+              { slug: categorySlug },
+              { slug: { startsWith: categorySlug + '/' } },
+            ],
+          },
+          select: { id: true },
+        });
+        const ids = allCategoryIds.map(c => c.id);
+        if (ids.length > 0) {
+          where.categoryId = { in: ids };
+        } else {
+          // Category not found, return empty
+          return { data: [], total: 0, page, pageSize, totalPages: 0 };
+        }
+      } else {
+        const category = await prisma.category.findFirst({
+          where: { slug: categorySlug, siteId },
+        });
+        if (category) {
+          where.categoryId = category.id;
+        } else {
+          return { data: [], total: 0, page, pageSize, totalPages: 0 };
+        }
+      }
     }
+
     if (search) {
       where.OR = [
         { title: { contains: search } },
@@ -38,6 +88,17 @@ export const postService = {
       where.tags = { some: { tagId } };
     }
 
+    // Build orderBy array
+    const dir = orderDir === 'asc' ? 'asc' : 'desc';
+    let orderByArr: Record<string, string>[];
+    if (orderBy === 'viewCount') {
+      orderByArr = [{ viewCount: dir }, { publishedAt: 'desc' }];
+    } else if (orderBy === 'sortOrder') {
+      orderByArr = [{ sortOrder: 'asc' }, { publishedAt: 'desc' }];
+    } else {
+      orderByArr = [{ publishedAt: dir }, { createdAt: 'desc' }];
+    }
+
     const [data, total] = await Promise.all([
       prisma.post.findMany({
         where: where as never,
@@ -46,7 +107,7 @@ export const postService = {
           author: { select: { id: true, name: true, email: true } },
           tags: { include: { tag: true } },
         },
-        orderBy: [{ sortOrder: 'asc' }, { publishedAt: 'desc' }, { createdAt: 'desc' }],
+        orderBy: orderByArr as never,
         skip,
         take: pageSize,
       }),
