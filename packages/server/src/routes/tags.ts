@@ -6,10 +6,21 @@ export const tagRoutes = new Elysia({ prefix: '/api/tags' })
   .get('/', async () => {
     return tagService.list();
   })
+  .get('/:id', async ({ params }) => {
+    return tagService.getById(Number(params.id));
+  })
   .guard({ beforeHandle: [authBeforeHandle] }, (app) =>
     app
       .post('/', async ({ body }) => {
         return tagService.create(body);
+      }, {
+        body: t.Object({
+          name: t.String(),
+          slug: t.String(),
+        }),
+      })
+      .put('/:id', async ({ params, body }) => {
+        return tagService.update(Number(params.id), body);
       }, {
         body: t.Object({
           name: t.String(),

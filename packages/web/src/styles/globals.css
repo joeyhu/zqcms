@@ -119,3 +119,11 @@
   opacity: 0.15;
   pointer-events: none;
 }
+
+/* ── Code highlighting overrides ── */
+/* Use our container background instead of the theme's default */
+pre code.hljs,
+pre .hljs {
+  background: transparent !important;
+  padding: 0 !important;
+}

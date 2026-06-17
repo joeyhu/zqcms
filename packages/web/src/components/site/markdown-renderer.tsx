@@ -3,6 +3,8 @@ import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
 import rehypeSlug from 'rehype-slug';
 import type { Components } from 'react-markdown';
+import { CodeBlock } from './code-block';
+import '@/styles/hljs-atom-one-dark.css';
 
 interface MarkdownRendererProps {
   content: string;
@@ -32,6 +34,7 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
       <ol className="my-3 list-decimal pl-6 space-y-1 text-gray-700" {...props}>{children}</ol>
     ),
     code: ({ className, children, ...props }) => {
+      // Only handle inline code here; block code is handled by the pre → CodeBlock component
       const isInline = !className;
       if (isInline) {
         return (
@@ -40,14 +43,16 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
           </code>
         );
       }
+      // For block code inside <pre>, let CodeBlock handle the styling;
+      // return the code element with its syntax-highlighting classes intact
       return (
-        <code className={`block rounded-lg bg-gray-900 p-4 text-sm text-gray-100 overflow-x-auto ${className || ''}`} {...props}>
+        <code className={className} {...props}>
           {children}
         </code>
       );
     },
-    pre: ({ children, ...props }) => (
-      <pre className="my-4 overflow-x-auto rounded-lg bg-gray-900 p-4" {...props}>{children}</pre>
+    pre: ({ children }) => (
+      <CodeBlock>{children}</CodeBlock>
     ),
     blockquote: ({ children, ...props }) => (
       <blockquote className="my-4 border-l-4 border-blue-400 bg-blue-50 px-4 py-2 text-gray-700" {...props}>{children}</blockquote>

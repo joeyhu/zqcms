@@ -29,6 +29,12 @@ export function BreadcrumbWrapper({ categories }: BreadcrumbWrapperProps) {
     const seg = segments[i];
     accumulatedPath += `/${seg}`;
 
+    // Handle tag pages specially
+    if (seg === 'tag') {
+      items.push({ label: '标签' });
+      continue;
+    }
+
     if (i === segments.length - 1 && segments.length >= 2) {
       // 最后一段可能是文章 ID（纯数字）或子目录 slug
       if (/^\d+$/.test(seg)) {

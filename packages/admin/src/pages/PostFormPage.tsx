@@ -38,6 +38,8 @@ export function PostFormPage() {
   const [isPinned, setIsPinned] = useState(false);
   const [coverImage, setCoverImage] = useState("");
   const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
+  const [newTagName, setNewTagName] = useState("");
+  const [addingTag, setAddingTag] = useState(false);
   const [showMediaPicker, setShowMediaPicker] = useState(false);
   const [hasAuthor, setHasAuthor] = useState(true);
   const [aiAction, setAiAction] = useState<string | null>(null);
@@ -71,7 +73,7 @@ export function PostFormPage() {
         setIsFeatured(post.isFeatured);
         setIsPinned(post.isPinned);
         setCoverImage(post.coverImage || "");
-        setSelectedTagIds((post.tags || []).map((t: Tag) => t.id));
+        setSelectedTagIds((post.tags || []).map((t: any) => (t.tag || t).id).filter(Boolean));
       });
     }
   }, [id, isEdit]);
@@ -116,6 +118,44 @@ export function PostFormPage() {
     coverImage,
     selectedTagIds,
   ]);
+
+  // ── 内联新建标签 ──
+  const handleAddTag = async () => {
+    const name = newTagName.trim();
+    if (!name || addingTag) return;
+
+    const slug = name
+      .toLowerCase()
+      .replace(/[^\w\u4e00-\u9fff]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+    if (!slug) return;
+
+    // 检查是否已存在于本地列表中（不区分大小写）
+    const existing = tags.find((t) => t.slug.toLowerCase() === slug);
+    if (existing) {
+      if (!selectedTagIds.includes(existing.id)) {
+        setSelectedTagIds((prev) => [...prev, existing.id]);
+      }
+      setNewTagName('');
+      return;
+    }
+
+    setAddingTag(true);
+    try {
+      const created = await fetchAPI<Tag>('/tags', {
+        method: 'POST',
+        body: JSON.stringify({ name, slug }),
+      });
+      setTags((prev) => [...prev, created]);
+      setSelectedTagIds((prev) => [...prev, created.id]);
+      setNewTagName('');
+      toast.success(`已添加标签「${name}」`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : '添加标签失败');
+    } finally {
+      setAddingTag(false);
+    }
+  };
 
   const doSave = async (overrideStatus?: string, isAuto = false) => {
     if (isAuto) setAutoSaving(true);
@@ -491,11 +531,32 @@ export function PostFormPage() {
               )}
 
               {/* 标签选择 */}
-              {tags.length > 0 && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    标签
-                  </label>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  标签
+                </label>
+                {/* 新建标签输入 */}
+                <div className="flex gap-2 mb-3">
+                  <input
+                    type="text"
+                    value={newTagName}
+                    onChange={(e) => setNewTagName(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTag())}
+                    placeholder="输入新标签名..."
+                    className="flex-1 rounded-lg border px-3 py-1.5 text-xs focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
+                    disabled={addingTag}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddTag}
+                    disabled={!newTagName.trim() || addingTag}
+                    className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-600 hover:bg-blue-100 disabled:opacity-40 transition-colors"
+                  >
+                    {addingTag ? '添加中...' : '添加'}
+                  </button>
+                </div>
+                {/* 现有标签 */}
+                {tags.length > 0 ? (
                   <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
                     {tags.map((tag) => {
                       const checked = selectedTagIds.includes(tag.id);
@@ -525,8 +586,10 @@ export function PostFormPage() {
                       );
                     })}
                   </div>
-                </div>
-              )}
+                ) : (
+                  <p className="text-xs text-gray-400 py-2">暂无标签，可在上方输入框添加</p>
+                )}
+              </div>
 
               <label className="flex items-center gap-2 text-sm">
                 <input

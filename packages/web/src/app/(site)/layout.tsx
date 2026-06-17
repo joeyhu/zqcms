@@ -6,6 +6,7 @@ import { Footer } from '@/components/site/footer';
 import { SiteSwitcher } from '@/components/site/site-switcher';
 import { Breadcrumb } from '@/components/site/breadcrumb';
 import { BreadcrumbWrapper } from '@/components/site/breadcrumb-wrapper';
+import { BackToTop } from '@/components/site/back-to-top';
 
 async function getSiteData(): Promise<{
   settings: SiteSettings;
@@ -42,6 +43,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
       <main className="flex-1">{children}</main>
       <Footer settings={settings} />
       <SiteSwitcher />
+      <BackToTop />
     </div>
   );
 }

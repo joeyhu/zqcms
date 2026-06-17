@@ -8,12 +8,33 @@ export const tagService = {
     });
   },
 
+  async getById(id: number) {
+    return prisma.tag.findUniqueOrThrow({ where: { id } });
+  },
+
   async create(data: { name: string; slug: string }) {
+    // 统一 slug 为小写，确保不区分大小写的唯一性
+    const slug = data.slug.toLowerCase();
     return prisma.tag.upsert({
-      where: { slug: data.slug },
+      where: { slug },
       update: { name: data.name },
-      create: data,
+      create: { name: data.name, slug },
     });
+  },
+
+  async update(id: number, data: { name: string; slug: string }) {
+    // 统一 slug 为小写，upsert 保证不区分大小写唯一
+    const slug = data.slug.toLowerCase();
+    const result = await prisma.tag.upsert({
+      where: { slug },
+      update: { name: data.name },
+      create: { name: data.name, slug },
+    });
+    // 如果 upsert 落到另一条记录上（slug 被占用），清理原记录
+    if (result.id !== id) {
+      await prisma.tag.delete({ where: { id } }).catch(() => {});
+    }
+    return result;
   },
 
   async delete(id: number) {
