@@ -8,9 +8,42 @@ interface FetchOptions extends RequestInit {
   revalidate?: number;
 }
 
+/**
+ * Build a properly encoded API URL from endpoint + query params.
+ * Encodes path segments and query values to handle Chinese characters etc.
+ */
+function buildApiUrl(endpoint: string, extraParams?: Record<string, string>): string {
+  // Split endpoint into path and query string
+  const [rawPath, rawQuery] = endpoint.split('?');
+
+  // Encode each path segment individually (preserve slashes)
+  const encodedPath = rawPath
+    .split('/')
+    .map(seg => encodeURIComponent(seg))
+    .join('/');
+
+  let url = `${API_BASE}${encodedPath}`;
+
+  // Collect query params
+  const params = new URLSearchParams();
+  if (rawQuery) {
+    const existing = new URLSearchParams(rawQuery);
+    existing.forEach((v, k) => params.set(k, v));
+  }
+  if (extraParams) {
+    for (const [k, v] of Object.entries(extraParams)) {
+      params.set(k, v);
+    }
+  }
+
+  const qs = params.toString();
+  if (qs) url += '?' + qs;
+
+  return url;
+}
+
 export async function fetchAPI<T>(endpoint: string, options: FetchOptions = {}): Promise<T> {
   const { revalidate = 5, ...fetchOpts } = options;
-  let apiUrl = `${API_BASE}${endpoint}`;
 
   // Read host from Next.js headers (SSR only)
   let host = '';
@@ -18,19 +51,17 @@ export async function fetchAPI<T>(endpoint: string, options: FetchOptions = {}):
   try {
     const headersList = await nextHeaders();
     host = headersList.get('host') || headersList.get('x-forwarded-host') || '';
-
-    // ★ 从 middleware 注入的 x-zqcms-site header 读取站点 slug
-    //   开发模式通过 ?site=slug 切换站点，middleware 会将其写入此 header
     siteSlug = headersList.get('x-zqcms-site') || '';
   } catch {
     host = typeof window !== 'undefined' ? window.location.host : 'localhost';
   }
 
-  // ★ 附加 site 参数到 API URL（服务器中间件支持的 ?site= 参数）
+  const extraParams: Record<string, string> = {};
   if (siteSlug) {
-    const separator = endpoint.includes('?') ? '&' : '?';
-    apiUrl = `${API_BASE}${endpoint}${separator}site=${encodeURIComponent(siteSlug)}`;
+    extraParams.site = siteSlug;
   }
+
+  const apiUrl = buildApiUrl(endpoint, extraParams);
 
   const res = await fetch(apiUrl, {
     ...fetchOpts,

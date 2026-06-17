@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { usePathname } from 'next/navigation';
-import { Breadcrumb } from './breadcrumb';
+import { usePathname } from "next/navigation";
+import { Breadcrumb } from "./breadcrumb";
 
 interface CategoryInfo {
   id: number;
@@ -16,47 +16,55 @@ interface BreadcrumbWrapperProps {
 
 export function BreadcrumbWrapper({ categories }: BreadcrumbWrapperProps) {
   const pathname = usePathname();
-  if (pathname === '/') return null; // 首页不显示
+  if (pathname === "/") return null;
 
-  const segments = pathname.split('/').filter(Boolean);
+  const segments = pathname.split("/").filter(Boolean);
   const items: { label: string; href?: string }[] = [
-    { label: '首页', href: '/' },
+    { label: "首页", href: "/" },
   ];
 
-  let accumulatedPath = '';
+  let accumulatedPath = "";
+
   for (let i = 0; i < segments.length; i++) {
     const seg = segments[i];
     accumulatedPath += `/${seg}`;
     const isLast = i === segments.length - 1;
 
     // ── Tag pages ──
-    if (seg === 'tag') {
-      items.push({ label: '标签', href: isLast ? undefined : '/tag' });
+    if (seg === "tag") {
+      items.push({ label: "标签", href: isLast ? undefined : "/tag" });
       continue;
     }
 
     // ── Numeric = article ID → "文章内容" ──
     if (/^\d+$/.test(seg)) {
-      items.push({ label: '文章内容' });
+      items.push({ label: "文章内容" });
       continue;
     }
 
-    // ── Try to match a known category ──
-    const cat = categories.find(
-      (c) => c.slug === seg || c.slug.endsWith(`/${seg}`),
-    );
+    // ── Match category by building the full slug from accumulated segments ──
+    // For URL /docs/guide, the fullSlug at i=0 is "docs", at i=1 is "docs/guide"
+    const fullSlug = segments.slice(0, i + 1).join("/");
+    const cat = categories.find((c) => c.slug === fullSlug);
+
     if (cat) {
-      items.push({ label: cat.name, href: isLast ? undefined : accumulatedPath });
+      items.push({
+        label: cat.name,
+        // Last category segment: still link it (useful for subcategory pages)
+        href: accumulatedPath,
+      });
       continue;
     }
 
-    // ── Unknown slug segment (e.g., article slug, or unmatched path) ──
-    if (isLast) {
-      const displayName = seg.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
-      items.push({ label: displayName });
-    } else {
-      items.push({ label: seg, href: accumulatedPath });
-    }
+    // ── Unknown segment ──
+    // Try to make it human-readable
+    const displayName = seg
+      .replace(/-/g, " ")
+      .replace(/\b\w/g, (c) => c.toUpperCase());
+    items.push({
+      label: displayName,
+      href: isLast ? undefined : accumulatedPath,
+    });
   }
 
   return <Breadcrumb items={items} />;

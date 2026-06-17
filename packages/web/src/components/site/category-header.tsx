@@ -1,6 +1,6 @@
-import type { Category } from '@zqcms/shared/types';
-import { FolderOpen, ChevronRight } from 'lucide-react';
-import { getIconComponent } from '@/lib/icon';
+import type { Category } from "@zqcms/shared/types";
+import { FolderOpen, ChevronRight } from "lucide-react";
+import { getIconComponent } from "@/lib/icon";
 
 interface CategoryHeaderProps {
   category: Category & { posts?: { id: number }[] };
@@ -11,12 +11,13 @@ export function CategoryHeader({ category }: CategoryHeaderProps) {
   const IconComp = getIconComponent(category.icon);
 
   return (
-    <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-800 via-blue-900 to-indigo-900 mb-8">
+    <div className="relative overflow-hidden rounded bg-gradient-to-br from-slate-800 via-blue-900 to-indigo-900 mb-8">
       {/* Decorative pattern */}
-      <div className="absolute inset-0 opacity-[0.04]"
+      <div
+        className="absolute inset-0 opacity-[0.04]"
         style={{
-          backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 1px)',
-          backgroundSize: '32px 32px',
+          backgroundImage: "radial-gradient(circle, #fff 1px, transparent 1px)",
+          backgroundSize: "32px 32px",
         }}
       />
 
@@ -25,17 +26,10 @@ export function CategoryHeader({ category }: CategoryHeaderProps) {
       <div className="absolute -bottom-20 -left-20 w-64 h-64 rounded-full bg-indigo-500/10 blur-3xl" />
 
       <div className="relative px-6 py-10 sm:px-10 sm:py-14">
-        {/* Breadcrumb hint */}
-        <div className="flex items-center gap-2 text-sm text-blue-200/60 mb-4">
-          <a href="/" className="hover:text-blue-200 transition-colors">首页</a>
-          <ChevronRight className="h-3.5 w-3.5" />
-          <span className="text-blue-200">{category.name}</span>
-        </div>
-
         {/* Icon + Title */}
         <div className="flex items-center gap-4">
-          <div className="flex h-14 w-14 items-center justify-center rounded-lg bg-white/10 text-white backdrop-blur-sm">
-            <IconComp className="h-7 w-7" />
+          <div className="flex h-14 w-14 items-center mr-6 justify-center rounded-lg bg-white/10 text-white backdrop-blur-sm">
+            <IconComp className="h-8 w-8" />
           </div>
 
           <div>

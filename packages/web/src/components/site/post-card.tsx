@@ -18,46 +18,51 @@ export function PostCard({ post, cardClass, isLightText }: PostCardProps) {
     ? `/${post.category.slug}/${post.id}`
     : `/${post.id}`;
 
+  const categoryUrl = post.category?.slug ? `/${post.category.slug}` : '';
+
   const tagItems = (post.tags as unknown as Array<{ tag?: { id?: number; name?: string; slug?: string } }>)
     ?.map(t => t.tag)
     .filter(Boolean) || [];
 
   return (
-    <Link
-      href={articleUrl}
-      className={`group relative flex flex-col overflow-hidden transition-all duration-500 hover:-translate-y-1.5 ${baseClass}`}
-    >
-      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+    <div className={`group relative flex flex-col overflow-hidden transition-all duration-300 hover:-translate-y-1 ${baseClass}`}>
+      {/* Hover accent bar */}
+      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
 
-      {/* Cover Image */}
+      {/* ── Cover Image (links to article) ── */}
       {post.coverImage && (
-        <div className="relative overflow-hidden bg-gray-50" style={{ aspectRatio: '16/9' }}>
+        <Link href={articleUrl} className="relative overflow-hidden bg-gray-50 block" style={{ aspectRatio: '16/9' }}>
           <img
             src={post.coverImage}
             alt={post.title}
-            className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
             loading="lazy"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
-        </div>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+        </Link>
       )}
 
-      {/* Content */}
+      {/* ── Content ── */}
       <div className="flex flex-1 flex-col p-5 sm:p-6">
-        {/* Category badge (top) */}
-        {post.category && !isLightText && (
+        {/* Category badge (links to category page) */}
+        {post.category && !isLightText && categoryUrl && (
           <div className="mb-3">
-            <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-600">
+            <Link
+              href={categoryUrl}
+              className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-600 hover:bg-blue-100 transition-colors"
+            >
               <FolderOpen className="h-3 w-3" />
               {post.category.name}
-            </span>
+            </Link>
           </div>
         )}
 
-        {/* Title */}
-        <h3 className={`text-lg font-bold leading-snug line-clamp-2 transition-colors group-hover:text-blue-600 ${textClass}`}>
-          {post.title}
-        </h3>
+        {/* ── Title (links to article) ── */}
+        <Link href={articleUrl} className="block">
+          <h3 className={`text-lg font-bold leading-snug line-clamp-2 transition-colors group-hover:text-blue-600 ${textClass}`}>
+            {post.title}
+          </h3>
+        </Link>
 
         {/* Excerpt */}
         {post.excerpt && (
@@ -66,29 +71,37 @@ export function PostCard({ post, cardClass, isLightText }: PostCardProps) {
           </p>
         )}
 
-        {/* Spacer — pushes footer to bottom */}
+        {/* Spacer */}
         <div className="mt-auto pt-4" />
 
-        {/* Footer: tags + hot + date/views all in one row */}
+        {/* ── Footer ── */}
         <div className={`flex items-center justify-between gap-2 border-t pt-3 ${isLightText ? 'border-white/20' : 'border-gray-50'}`}>
-          {/* Left: tags + hot badge + date */}
+          {/* Left side: tags (clickable) + date/views (info) */}
           <div className={`flex items-center gap-2 text-xs min-w-0 flex-1 ${metaClass}`}>
-            {/* Tags (compact) */}
+            {/* Tags — each links to tag page */}
             {tagItems.length > 0 && !isLightText && (
-              <span className="inline-flex items-center gap-0.5 shrink-0">
+              <span className="inline-flex items-center gap-1 shrink-0">
                 <Hash className="h-3 w-3 text-gray-400" />
                 <span className="text-gray-500 truncate">
                   {tagItems.slice(0, 3).map((t, i) => (
                     <span key={t?.id}>
-                      {t?.name}{i < Math.min(tagItems.length, 3) - 1 ? ', ' : ''}
+                      <Link
+                        href={`/tag/${t?.slug}`}
+                        className="hover:text-blue-600 hover:underline transition-colors"
+                      >
+                        {t?.name}
+                      </Link>
+                      {i < Math.min(tagItems.length, 3) - 1 && ', '}
                     </span>
                   ))}
-                  {tagItems.length > 3 && <span className="text-gray-400"> +{tagItems.length - 3}</span>}
+                  {tagItems.length > 3 && (
+                    <span className="text-gray-400"> +{tagItems.length - 3}</span>
+                  )}
                 </span>
               </span>
             )}
 
-            {/* Hot badge */}
+            {/* Hot badge (non-clickable indicator) */}
             {post.isFeatured && (
               <span className="inline-flex items-center gap-0.5 rounded-full bg-orange-50 px-1.5 py-0.5 text-xs font-medium text-orange-600 border border-orange-200 shrink-0">
                 <Flame className="h-3 w-3" />
@@ -101,7 +114,7 @@ export function PostCard({ post, cardClass, isLightText }: PostCardProps) {
               <span className="text-gray-300 shrink-0">|</span>
             )}
 
-            {/* Date + views */}
+            {/* Date + views (non-clickable) */}
             <span className="inline-flex items-center gap-1.5 shrink-0">
               <Calendar className="h-3 w-3" />
               {post.publishedAt && (
@@ -115,13 +128,16 @@ export function PostCard({ post, cardClass, isLightText }: PostCardProps) {
             )}
           </div>
 
-          {/* Right: read more arrow */}
-          <span className={`inline-flex items-center gap-1 text-xs font-medium transition-all duration-300 shrink-0 ${isLightText ? 'text-current/70' : 'text-blue-600'} opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0`}>
+          {/* Right side: "阅读" (links to article) */}
+          <Link
+            href={articleUrl}
+            className={`inline-flex items-center gap-1 text-xs font-medium transition-all duration-300 shrink-0 ${isLightText ? 'text-current/70' : 'text-blue-600'} opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0`}
+          >
             阅读
             <ArrowRight className="h-3 w-3" />
-          </span>
+          </Link>
         </div>
       </div>
-    </Link>
+    </div>
   );
 }

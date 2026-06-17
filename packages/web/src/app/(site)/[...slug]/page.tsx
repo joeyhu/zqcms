@@ -80,24 +80,28 @@ function CategoryFallbackLayout({
   const totalPages = Math.max(1, Math.ceil(totalPosts / pageSize));
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      <CategoryHeader category={category} />
+    <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
+      <div className="animate-fade-in-up">
+        <CategoryHeader category={category} />
+      </div>
 
       {/* Sub-category list */}
       <SubCategoryList categories={children} />
 
       {/* Post list */}
       {posts.length > 0 ? (
-        <section>
+        <section className="animate-fade-in-up stagger-1">
           <div className="mb-5 flex items-center gap-2">
-            <h2 className="text-lg font-semibold text-gray-800">全部文章</h2>
+            <h2 className="text-lg font-semibold text-gray-800">
+              全部文章
+            </h2>
             <span className="text-sm text-gray-400">({totalPosts})</span>
           </div>
-          <PostList posts={posts} layout="grid" columns={2} />
+          <PostList posts={posts} layout="grid" columns={2} staggered />
           <Pagination currentPage={page} totalPages={totalPages} />
         </section>
       ) : (
-        <div className="py-20 text-center">
+        <div className="animate-fade-in py-20 text-center">
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-lg bg-gray-100">
             <svg
               className="h-8 w-8 text-gray-300"
@@ -113,7 +117,9 @@ function CategoryFallbackLayout({
               />
             </svg>
           </div>
-          <p className="text-lg font-medium text-gray-500">该分类下暂无文章</p>
+          <p className="text-lg font-medium text-gray-500">
+            该分类下暂无文章
+          </p>
           <p className="mt-1 text-sm text-gray-400">
             请稍后再来，或浏览其他分类
           </p>
@@ -145,14 +151,16 @@ async function ArticleDetailPage({ post }: { post: Post }) {
       <div className="flex justify-center">
         {/* Left: main content column */}
         <div className="flex-1 max-w-5xl min-w-0">
-          {/* Article Header with cover image, meta, author */}
-          <ArticleHeader post={post} />
+           {/* Article Header with cover image, meta, author */}
+          <div className="animate-fade-in-up">
+            <ArticleHeader post={post} />
+          </div>
 
           {/* Inline TOC (between header and body) + Sticky TOC portal */}
           {tocItems.length > 0 && <TableOfContents items={tocItems} />}
 
           {/* Post Content */}
-          <div className="bg-white rounded-lg border border-gray-100 px-6 py-8 sm:px-10 sm:py-10 shadow-sm">
+           <div className="animate-fade-in-up stagger-1 bg-white rounded-lg border border-gray-100 px-6 py-8 sm:px-10 sm:py-10 shadow-sm">
             <MarkdownRenderer content={post.content} />
           </div>
 

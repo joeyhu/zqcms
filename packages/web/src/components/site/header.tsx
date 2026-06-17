@@ -41,7 +41,7 @@ function NavLink({ cat, className = "", isActive }: NavLinkProps) {
       <span
         className={`
           absolute -bottom-0.5 left-0 right-0 mx-auto h-0.5 rounded-full
-          bg-gradient-to-r from-blue-500 to-indigo-500
+          bg-gradient-to-r from-blue-400 to-indigo-400
           transition-all duration-300
           ${isActive ? 'w-full opacity-100' : 'w-0 opacity-0 group-hover:w-full group-hover:opacity-100'}
         `}
@@ -65,8 +65,6 @@ export function Header({ settings, categories }: HeaderProps) {
     }
   }
 
-  // ── Determine active top-level category ──
-  // /docs, /docs/guide, /docs/42, /docs/guide/42 → "docs" active
   const segments = pathname.split('/').filter(Boolean);
   const firstSegment = segments[0] || '';
 
@@ -77,12 +75,12 @@ export function Header({ settings, categories }: HeaderProps) {
   const desktopLinkClass = (active: boolean) =>
     `rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
       active
-        ? 'bg-blue-50 text-blue-700'
-        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+        ? 'bg-white/10 text-white'
+        : 'text-gray-300 hover:text-white hover:bg-white/8'
     }`;
 
   return (
-    <header className="sticky top-0 z-50 border-b border-gray-100/80 bg-white/80 backdrop-blur-xl supports-[backdrop-filter]:bg-white/60">
+    <header className="sticky top-0 z-50 border-b border-gray-800 bg-gray-900">
       <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500" />
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
         {/* Logo */}
@@ -91,7 +89,7 @@ export function Header({ settings, categories }: HeaderProps) {
             <img src={settings.logo} alt={settings.siteName} className="h-8 w-auto" />
           )}
           {settings.siteName && (
-            <span className="text-blue-600">{settings.siteName}</span>
+            <span className="text-white">{settings.siteName}</span>
           )}
         </Link>
 
@@ -121,12 +119,12 @@ export function Header({ settings, categories }: HeaderProps) {
                 />
                 {!cat.url && (
                   <div className="invisible absolute left-0 top-full pt-1 opacity-0 group-hover:visible group-hover:opacity-100 transition-all z-50">
-                    <div className="rounded-lg border bg-white py-2 shadow-lg min-w-[160px]">
+                    <div className="rounded-lg border border-gray-700 bg-gray-800 py-2 shadow-xl min-w-[160px]">
                       {children.map((child) => (
                         <NavLink
                           key={child.id}
                           cat={child}
-                          className="block px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                          className="block px-4 py-2 text-sm text-gray-300 hover:bg-white/8 hover:text-white"
                         />
                       ))}
                     </div>
@@ -139,7 +137,7 @@ export function Header({ settings, categories }: HeaderProps) {
 
         {/* Mobile Toggle */}
         <button
-          className="md:hidden rounded-lg p-2 text-gray-600 hover:bg-gray-100"
+          className="md:hidden rounded-lg p-2 text-gray-300 hover:bg-white/10"
           onClick={() => setMobileOpen(!mobileOpen)}
         >
           {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -148,7 +146,7 @@ export function Header({ settings, categories }: HeaderProps) {
 
       {/* Mobile Nav */}
       {mobileOpen && (
-        <nav className="border-t bg-white px-4 py-3 md:hidden">
+        <nav className="border-t border-gray-800 bg-gray-900 px-4 py-3 md:hidden">
           {topCategories.map((cat) => {
             const children = childMap.get(cat.id) || [];
             const active = isCategoryActive(cat);
@@ -158,7 +156,7 @@ export function Header({ settings, categories }: HeaderProps) {
                   <NavLink
                     cat={cat}
                     isActive={active}
-                    className={active ? 'text-blue-700' : 'text-gray-700'}
+                    className={active ? 'text-white' : 'text-gray-300'}
                   />
                 </div>
                 {!cat.url &&
@@ -166,7 +164,7 @@ export function Header({ settings, categories }: HeaderProps) {
                     <div key={child.id} className="ml-4" onClick={() => setMobileOpen(false)}>
                       <NavLink
                         cat={child}
-                        className="block rounded-lg px-3 py-2 text-sm text-gray-500 hover:bg-gray-50"
+                        className="block rounded-lg px-3 py-2 text-sm text-gray-400 hover:bg-white/5 hover:text-gray-200"
                       />
                     </div>
                   ))}

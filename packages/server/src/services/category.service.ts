@@ -72,7 +72,7 @@ export const categoryService = {
     const category = await prisma.category.findUnique({
       where: { siteId_slug: { siteId, slug } },
       include: {
-        children: { orderBy: { sortOrder: 'asc' } },
+        children: { orderBy: { sortOrder: 'asc' }, include: { _count: { select: { posts: true } } } },
         posts: {
           where: postWhere as never,
           include: { tags: { include: { tag: true } } },
