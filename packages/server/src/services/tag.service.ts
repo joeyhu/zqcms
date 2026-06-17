@@ -12,6 +12,13 @@ export const tagService = {
     return prisma.tag.findUniqueOrThrow({ where: { id } });
   },
 
+  async getBySlug(slug: string) {
+    return prisma.tag.findUnique({
+      where: { slug: slug.toLowerCase() },
+      include: { _count: { select: { posts: true } } },
+    });
+  },
+
   async create(data: { name: string; slug: string }) {
     // 统一 slug 为小写，确保不区分大小写的唯一性
     const slug = data.slug.toLowerCase();

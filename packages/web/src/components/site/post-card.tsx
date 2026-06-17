@@ -14,9 +14,14 @@ export function PostCard({ post, cardClass, isLightText }: PostCardProps) {
   const mutedClass = isLightText ? 'opacity-80' : 'text-gray-500';
   const metaClass = isLightText ? 'opacity-60' : 'text-gray-400';
 
+  // URL: /{categoryFullPath}/{postId}  or  /{postId} if no category
+  const articleUrl = post.category?.slug
+    ? `/${post.category.slug}/${post.id}`
+    : `/${post.id}`;
+
   return (
     <Link
-      href={`/${post.category?.slug}/${post.id}`}
+      href={articleUrl}
       className={`group relative flex flex-col overflow-hidden transition-all duration-500 hover:-translate-y-1.5 ${baseClass}`}
     >
       {/* Gradient top accent bar */}

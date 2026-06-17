@@ -6,6 +6,9 @@ export const tagRoutes = new Elysia({ prefix: '/api/tags' })
   .get('/', async () => {
     return tagService.list();
   })
+  .get('/by-slug/:slug', async ({ params }) => {
+    return tagService.getBySlug(params.slug);
+  })
   .get('/:id', async ({ params }) => {
     return tagService.getById(Number(params.id));
   })

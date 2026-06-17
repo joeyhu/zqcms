@@ -11,7 +11,7 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const tag = await fetchAPI<Tag | null>(`/tags/${slug}`).catch(() => null);
+  const tag = await fetchAPI<Tag | null>(`/tags/by-slug/${slug}`).catch(() => null);
   if (tag) {
     return {
       title: `标签：${tag.name}`,
@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function TagPage({ params }: PageProps) {
   const { slug } = await params;
 
-  const tag = await fetchAPI<Tag | null>(`/tags/${slug}`).catch(() => null);
+  const tag = await fetchAPI<Tag | null>(`/tags/by-slug/${slug}`).catch(() => null);
   if (!tag) notFound();
 
   const result = await fetchAPI<{ data: Post[]; total: number }>(

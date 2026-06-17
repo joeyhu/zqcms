@@ -22,27 +22,13 @@ export async function generateMetadata({
   params,
 }: PageProps): Promise<Metadata> {
   const { slug } = await params;
+  const lastSegment = slug[slug.length - 1];
+  const isNumericId = /^\d+$/.test(lastSegment);
 
-  // Category page
-  if (slug.length === 1) {
-    const category = await fetchAPI<Category | null>(`/categories/${slug[0]}`);
-    if (category) {
-      return {
-        title: category.name,
-        description: category.description || `${category.name} 相关文章`,
-      };
-    }
-  }
-
-  // Post page
-  if (slug.length >= 2) {
-    const categorySlug = slug[slug.length - 2];
-    const lastSegment = slug[slug.length - 1];
-    const isNumericId = /^\d+$/.test(lastSegment);
+  // Article page (URL ends with numeric ID)
+  if (isNumericId) {
     const post = await fetchAPI<Post | null>(
-      isNumericId
-        ? `/posts/by-id/${lastSegment}`
-        : `/posts/${categorySlug}/${lastSegment}`,
+      `/posts/by-id/${lastSegment}`,
     ).catch(() => null);
     if (post) {
       return {
@@ -57,6 +43,19 @@ export async function generateMetadata({
         },
       };
     }
+    return { title: "文章未找到" };
+  }
+
+  // Category page (all segments form the category slug path)
+  const fullSlug = slug.join("/");
+  const category = await fetchAPI<Category | null>(
+    `/categories/${fullSlug}`,
+  ).catch(() => null);
+  if (category) {
+    return {
+      title: category.name,
+      description: category.description || `${category.name} 相关文章`,
+    };
   }
 
   return { title: "页面未找到" };
@@ -173,11 +172,11 @@ async function ArticleDetailPage({ post }: { post: Post }) {
   const tocItems = parseTocFromMarkdown(post.content);
 
   return (
-    <article className="mx-auto max-w-8xl px-4 py-8 sm:px-6">
+    <article className="mx-auto px-4 py-8">
       {/* Content body + TOC sidebar */}
-      <div className="flex justify-center gap-[15px]">
+      <div className="flex justify-center">
         {/* Left: main content column */}
-        <div className="flex-1 max-w-4xl min-w-0">
+        <div className="flex-1 max-w-5xl min-w-0">
           {/* Article Header with cover image, meta, author */}
           <ArticleHeader post={post} />
 
@@ -223,7 +222,7 @@ async function ArticleDetailPage({ post }: { post: Post }) {
         {tocItems.length > 0 && (
           <div
             id="toc-sidebar"
-            className="hidden lg:block w-[260px] shrink-0"
+            className="hidden lg:block w-[260px] shrink-0 ml-2"
           />
         )}
       </div>
@@ -234,85 +233,47 @@ async function ArticleDetailPage({ post }: { post: Post }) {
 // ============================================================
 // Main Catch-All Page
 // ============================================================
+// URL routing rules:
+//   Last segment is numeric → Article page  (/42, /docs/42, /docs/guide/42)
+//   Otherwise              → Category page (/docs, /docs/guide)
 export default async function CatchAllPage({ params }: PageProps) {
   const { slug } = await params;
-
-  // Case 1: Single segment → Category page (e.g., /docs)
-  if (slug.length === 1) {
-    const [blocks, category] = await Promise.all([
-      fetchAPI<PageBlock[]>(`/categories/blocks?slug=${slug[0]}`).catch(
-        () => [] as PageBlock[],
-      ),
-      fetchAPI<(Category & { posts: Post[] }) | null>(
-        `/categories/${slug[0]}?withPosts=true`,
-      ).catch(() => null),
-    ]);
-
-    if (!category) notFound();
-
-    const visibleBlocks = blocks.filter((b: PageBlock) => b.isVisible);
-    if (visibleBlocks.length > 0) {
-      return (
-        <>
-          {visibleBlocks.map((block) => (
-            <PageBlockRenderer key={block.id} block={block} />
-          ))}
-        </>
-      );
-    }
-
-    // Fallback to hardcoded blog-like layout
-    return <CategoryFallbackLayout category={category} />;
-  }
-
-  // Case 2: Two segments → Post page (e.g., /docs/42 or /docs/getting-started)
-  const categorySlug = slug[slug.length - 2];
   const lastSegment = slug[slug.length - 1];
   const isNumericId = /^\d+$/.test(lastSegment);
 
-  let post: Post | null = null;
+  // ── Article page ──
   if (isNumericId) {
-    // URL 使用数字 ID /docs/42
-    post = await fetchAPI<Post | null>(`/posts/by-id/${lastSegment}`).catch(
-      () => null,
-    );
-  } else {
-    // 兼容旧版 slug URL /docs/getting-started
-    post = await fetchAPI<Post | null>(
-      `/posts/${categorySlug}/${lastSegment}`,
+    const post = await fetchAPI<Post | null>(
+      `/posts/by-id/${lastSegment}`,
     ).catch(() => null);
+
+    if (!post) notFound();
+    return <ArticleDetailPage post={post} />;
   }
 
-  if (!post) {
-    // Maybe it's a nested category page? Try fetching as a category
-    const fullSlug = slug.join("/");
-    const [blocks, category] = await Promise.all([
-      fetchAPI<PageBlock[]>(
-        `/categories/blocks?slug=${encodeURIComponent(fullSlug)}`,
-      ).catch(() => [] as PageBlock[]),
-      fetchAPI<(Category & { posts: Post[] }) | null>(
-        `/categories/${fullSlug}?withPosts=true`,
-      ).catch(() => null),
-    ]);
+  // ── Category page ──
+  const fullSlug = slug.join("/");
+  const [blocks, category] = await Promise.all([
+    fetchAPI<PageBlock[]>(
+      `/categories/blocks?slug=${encodeURIComponent(fullSlug)}`,
+    ).catch(() => [] as PageBlock[]),
+    fetchAPI<(Category & { posts: Post[] }) | null>(
+      `/categories/${fullSlug}?withPosts=true`,
+    ).catch(() => null),
+  ]);
 
-    if (category) {
-      const visibleBlocks = blocks.filter((b: PageBlock) => b.isVisible);
-      if (visibleBlocks.length > 0) {
-        return (
-          <>
-            {visibleBlocks.map((block) => (
-              <PageBlockRenderer key={block.id} block={block} />
-            ))}
-          </>
-        );
-      }
+  if (!category) notFound();
 
-      // Fallback to hardcoded blog-like layout
-      return <CategoryFallbackLayout category={category} />;
-    }
-
-    notFound();
+  const visibleBlocks = blocks.filter((b: PageBlock) => b.isVisible);
+  if (visibleBlocks.length > 0) {
+    return (
+      <>
+        {visibleBlocks.map((block) => (
+          <PageBlockRenderer key={block.id} block={block} />
+        ))}
+      </>
+    );
   }
 
-  return <ArticleDetailPage post={post} />;
+  return <CategoryFallbackLayout category={category} />;
 }

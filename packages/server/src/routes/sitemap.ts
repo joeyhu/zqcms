@@ -17,7 +17,7 @@ export const sitemapRoutes = new Elysia({ prefix: '/api' })
       }),
       prisma.post.findMany({
         where: { siteId: site.id, status: 'PUBLISHED' },
-        select: { slug: true, category: { select: { slug: true } }, updatedAt: true },
+        select: { id: true, category: { select: { slug: true } }, updatedAt: true },
       }),
     ]);
 
@@ -25,7 +25,7 @@ export const sitemapRoutes = new Elysia({ prefix: '/api' })
     for (const cat of categories) urls.push(`<url><loc>${domain}/${cat.slug}</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>`);
     for (const post of posts) {
       if (post.category) {
-        urls.push(`<url><loc>${domain}/${post.category.slug}/${post.slug}</loc><lastmod>${post.updatedAt.toISOString()}</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>`);
+        urls.push(`<url><loc>${domain}/${post.category.slug}/${post.id}</loc><lastmod>${post.updatedAt.toISOString()}</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>`);
       }
     }
 

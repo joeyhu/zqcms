@@ -8,6 +8,18 @@ function sid(ctx: unknown): number {
   return (ctx as Record<string, unknown>).siteId as number;
 }
 
+/** Reserved slugs that cannot be used as category slugs (to avoid route conflicts) */
+const RESERVED_SLUGS = ['tag'];
+
+function validateCategorySlug(slug: string): void {
+  const normalized = slug.toLowerCase().trim();
+  for (const reserved of RESERVED_SLUGS) {
+    if (normalized === reserved || normalized.startsWith(reserved + '/')) {
+      throw new Error(`目录 slug 不能使用保留名称 "${reserved}"，请使用其他名称`);
+    }
+  }
+}
+
 export const categoryRoutes = new Elysia({ prefix: '/api/categories' })
   .get('/', async (ctx) => {
     const { query } = ctx as { query: Record<string, string> };
@@ -46,6 +58,7 @@ export const categoryRoutes = new Elysia({ prefix: '/api/categories' })
       })
       .post('/', async (ctx) => {
         const b = (ctx as { body: Record<string, unknown> }).body as Record<string, unknown>;
+        validateCategorySlug(b.slug as string);
         b.siteId = sid(ctx);
         return categoryService.create(b as never);
       }, {
@@ -58,7 +71,9 @@ export const categoryRoutes = new Elysia({ prefix: '/api/categories' })
         }),
       })
       .put('/:id', async (ctx) => {
-        return categoryService.update(Number((ctx as { params: Record<string, string> }).params.id), (ctx as { body: Record<string, unknown> }).body);
+        const body = (ctx as { body: Record<string, unknown> }).body;
+        if (body.slug) validateCategorySlug(body.slug as string);
+        return categoryService.update(Number((ctx as { params: Record<string, string> }).params.id), body);
       }, {
         body: t.Object({
           name: t.Optional(t.String()), slug: t.Optional(t.String()),

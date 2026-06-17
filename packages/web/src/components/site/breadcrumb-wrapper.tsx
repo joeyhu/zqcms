@@ -23,39 +23,39 @@ export function BreadcrumbWrapper({ categories }: BreadcrumbWrapperProps) {
     { label: '首页', href: '/' },
   ];
 
-  // 逐段查找对应的目录名
   let accumulatedPath = '';
   for (let i = 0; i < segments.length; i++) {
     const seg = segments[i];
     accumulatedPath += `/${seg}`;
+    const isLast = i === segments.length - 1;
 
-    // Handle tag pages specially
+    // ── Tag pages ──
     if (seg === 'tag') {
-      items.push({ label: '标签' });
+      items.push({ label: '标签', href: isLast ? undefined : '/tag' });
       continue;
     }
 
-    if (i === segments.length - 1 && segments.length >= 2) {
-      // 最后一段可能是文章 ID（纯数字）或子目录 slug
-      if (/^\d+$/.test(seg)) {
-        // 数字 ID → 文章详情页
-        items.push({ label: '文章内容' });
-      } else {
-        const cat = categories.find((c) => c.slug === seg || c.slug.endsWith(`/${seg}`));
-        if (cat) {
-          items.push({ label: cat.name, href: accumulatedPath });
-        } else {
-          const displayName = seg.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
-          items.push({ label: displayName });
-        }
-      }
+    // ── Numeric = article ID → "文章内容" ──
+    if (/^\d+$/.test(seg)) {
+      items.push({ label: '文章内容' });
+      continue;
+    }
+
+    // ── Try to match a known category ──
+    const cat = categories.find(
+      (c) => c.slug === seg || c.slug.endsWith(`/${seg}`),
+    );
+    if (cat) {
+      items.push({ label: cat.name, href: isLast ? undefined : accumulatedPath });
+      continue;
+    }
+
+    // ── Unknown slug segment (e.g., article slug, or unmatched path) ──
+    if (isLast) {
+      const displayName = seg.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+      items.push({ label: displayName });
     } else {
-      const cat = categories.find((c) => c.slug === seg || c.slug.endsWith(`/${seg}`));
-      if (cat) {
-        items.push({ label: cat.name, href: accumulatedPath });
-      } else {
-        items.push({ label: seg, href: accumulatedPath });
-      }
+      items.push({ label: seg, href: accumulatedPath });
     }
   }
 
