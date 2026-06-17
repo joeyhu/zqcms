@@ -1,0 +1,36 @@
+{
+  "name": "zqcms",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "shared"
+  ],
+  "scripts": {
+    "dev:server": "cd packages/server && bun run dev",
+    "dev:web": "cd packages/web && bun run dev",
+    "dev:admin": "cd packages/admin && bun run dev",
+    "dev": "bun run dev:server & bun run dev:web & bun run dev:admin & wait",
+    "build:server": "cd packages/server && bun run build",
+    "build:web": "cd packages/web && bun run build",
+    "build:admin": "cd packages/admin && bun run build",
+    "build": "bun run build:server && bun run build:web && bun run build:admin",
+    "db:init": "bash scripts/setup-db.sh && cd packages/server && bunx prisma db push --skip-generate && echo '✅ Schema 同步完成'",
+    "db:seed": "cd packages/server && bun run db:seed",
+    "db:studio": "cd packages/server && bun run db:studio",
+    "db:reset": "bash -c 'mysql -u root ${MYSQL_ROOT_PASSWORD:+-p$MYSQL_ROOT_PASSWORD} -e \"DROP DATABASE IF EXISTS zqcms\"' && bun run db:init && bun run db:seed",
+    "db:push": "cd packages/server && bunx prisma db push",
+    "db:generate": "cd packages/server && bunx prisma generate",
+    "setup": "bun install && bun run db:generate && bun run db:init && bun run db:seed",
+    "test": "bun test",
+    "test:server": "cd packages/server && bun test",
+    "test:web": "cd packages/web && bun test",
+    "test:admin": "cd packages/admin && bun test"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
+    "happy-dom": "^20.10.5"
+  }
+}

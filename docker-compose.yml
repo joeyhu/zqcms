@@ -1,0 +1,21 @@
+version: "3.8"
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: zqcms-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: zqcms_root_2024
+      MYSQL_DATABASE: zqcms
+      MYSQL_USER: zqcms
+      MYSQL_PASSWORD: zqcms_pass_2024
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./docker/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+
+volumes:
+  mysql_data:

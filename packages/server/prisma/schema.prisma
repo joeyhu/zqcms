@@ -1,0 +1,193 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ==========================================
+// 站点（替代旧 SiteSettings，支持多站点）
+// ==========================================
+model Site {
+  id              Int       @id @default(autoincrement())
+  name            String                             // 站点名称
+  slug            String    @unique                  // 内部标识（?site=slug 用）
+  domain          String    @unique                  // 绑定域名
+  isDefault       Boolean   @default(false)          // 默认站点（dev 兜底）
+  description     String?   @db.Text                 // 站点描述
+  logo            String?                            // Logo URL
+  favicon         String?                            // Favicon URL
+  primaryColor    String    @default("#3B82F6")      // 主题色
+  contactEmail    String?                            // 联系邮箱
+  contactPhone    String?                            // 联系电话
+  address         String?                            // 地址
+  socialLinks     Json?                              // { github: "...", twitter: "..." }
+  footerText      String?   @db.Text                 // 页脚文案
+  copyright       String?                            // 版权信息
+  gaId            String?                            // Google Analytics ID
+  isActive        Boolean   @default(true)           // 是否启用
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  categories   Category[]
+  posts        Post[]
+  pageBlocks   PageBlock[]
+  media        Media[]
+
+  @@index([domain])
+  @@index([slug])
+}
+
+// ==========================================
+// 多级导航目录（加 siteId）
+// ==========================================
+model Category {
+  id          Int        @id @default(autoincrement())
+  siteId      Int                                 // 所属站点
+  site        Site       @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  name        String
+  slug        String
+  description String?    @db.Text
+  icon        String?
+  sortOrder   Int        @default(0)
+  isVisible   Boolean    @default(true)
+  parentId    Int?
+  parent      Category?  @relation("CategoryTree", fields: [parentId], references: [id])
+  children    Category[] @relation("CategoryTree")
+  posts       Post[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@unique([siteId, slug])
+  @@index([siteId, sortOrder])
+  @@index([siteId, parentId])
+}
+
+// ==========================================
+// 文章（加 siteId）
+// ==========================================
+model Post {
+  id          Int        @id @default(autoincrement())
+  siteId      Int                                 // 所属站点
+  site        Site       @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  title       String
+  slug        String
+  content     String     @db.LongText
+  excerpt     String?    @db.Text
+  coverImage  String?
+  status      PostStatus @default(DRAFT)
+  sortOrder   Int        @default(0)
+  categoryId  Int
+  category    Category   @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  authorId    String
+  author      User       @relation(fields: [authorId], references: [id])
+  tags        PostTag[]
+
+  seoTitle    String?
+  seoDesc     String?    @db.Text
+
+  viewCount   Int        @default(0)
+  isFeatured  Boolean    @default(false)
+  publishedAt DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@unique([siteId, categoryId, slug])
+  @@index([siteId, sortOrder])
+  @@index([siteId, categoryId, status, sortOrder])
+  @@index([slug, status])
+}
+
+enum PostStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+// ==========================================
+// 用户（全局管理员，不变）
+// ==========================================
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String?
+  role      Role     @default(EDITOR)
+  posts     Post[]
+  createdAt DateTime @default(now())
+}
+
+enum Role {
+  ADMIN
+  EDITOR
+}
+
+// ==========================================
+// 标签（全局共享，不变）
+// ==========================================
+model Tag {
+  id    Int       @id @default(autoincrement())
+  name  String    @unique
+  slug  String    @unique
+  posts PostTag[]
+}
+
+model PostTag {
+  postId Int
+  tagId  Int
+  post   Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  tag    Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([postId, tagId])
+}
+
+// ==========================================
+// 首页区块（加 siteId）
+// ==========================================
+model PageBlock {
+  id        Int       @id @default(autoincrement())
+  siteId    Int                                // 所属站点
+  site      Site      @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  pageType  String
+  blockType BlockType
+  title     String?
+  config    Json      @default("{}")
+  sortOrder Int       @default(0)
+  isVisible Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([siteId, pageType, sortOrder])
+}
+
+enum BlockType {
+  HERO
+  FEATURES
+  CTA
+  POST_LIST
+  CATEGORY_LIST
+  FAQ
+  MARKDOWN
+  TESTIMONIALS
+  CONTACT
+  DIVIDER
+}
+
+// ==========================================
+// 媒体文件（加 siteId）
+// ==========================================
+model Media {
+  id        Int      @id @default(autoincrement())
+  siteId    Int                               // 所属站点
+  site      Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  filename  String
+  url       String
+  mimeType  String
+  size      Int
+  altText   String?
+  createdAt DateTime @default(now())
+
+  @@index([siteId])
+}
