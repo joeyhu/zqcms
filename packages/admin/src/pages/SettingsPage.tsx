@@ -1,6 +1,7 @@
 import { useEffect, useState, FormEvent } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { fetchAPI } from "@/lib/api-client";
+import { Tooltip } from "@/components/ui/Tooltip";
 import type { SiteSettings } from "@zqcms/shared/types";
 import toast from "react-hot-toast";
 
@@ -241,13 +242,15 @@ export function SettingsPage() {
                     placeholder="链接 (如 https://github.com/...)"
                     className="flex-[2] rounded-lg border px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
                   />
-                  <button
-                    type="button"
-                    onClick={() => removeSocialEntry(i)}
-                    className="rounded p-1.5 text-gray-300 hover:text-red-500 flex-shrink-0"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
+                  <Tooltip content="删除">
+                    <button
+                      type="button"
+                      onClick={() => removeSocialEntry(i)}
+                      className="rounded p-1.5 text-gray-300 hover:text-red-500 flex-shrink-0"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </Tooltip>
                 </div>
               ))}
             </div>
@@ -285,10 +288,12 @@ export function SettingsPage() {
                     placeholder="二维码图片 URL (如 /uploads/1/qr.png)"
                     className="flex-[2] rounded-lg border px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
                   />
-                  <button type="button" onClick={() => removeQrEntry(i)}
-                    className="rounded p-1.5 text-gray-300 hover:text-red-500 flex-shrink-0">
-                    <Trash2 className="h-4 w-4" />
-                  </button>
+                  <Tooltip content="删除">
+                    <button type="button" onClick={() => removeQrEntry(i)}
+                      className="rounded p-1.5 text-gray-300 hover:text-red-500 flex-shrink-0">
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </Tooltip>
                 </div>
               ))}
             </div>

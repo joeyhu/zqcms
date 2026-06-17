@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Plus, Edit3, Trash2, Lock, Copy } from 'lucide-react';
 import { fetchAPI } from '@/lib/api-client';
 import { useConfirm } from '@/components/ui/ConfirmDialog';
+import { Tooltip } from '@/components/ui/Tooltip';
 import { CardPreview } from '@/components/builder/CardPreview';
 import type { CardTemplate } from '@zqcms/shared/types';
 import toast from 'react-hot-toast';
@@ -79,28 +80,31 @@ export function CardTemplateListPage() {
               <div className="flex items-center justify-between pt-2 border-t border-gray-100">
                 <p className="text-xs font-medium text-gray-600 truncate">{t.name}</p>
                 <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity relative z-10">
-                  <button
-                    onClick={(e) => { e.stopPropagation(); navigate(`/cards/${t.id}/edit`); }}
-                    className="rounded p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50"
-                    title="编辑"
-                  >
-                    <Edit3 className="h-4 w-4" />
-                  </button>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); handleDuplicate(t.id); }}
-                    className="rounded p-1.5 text-gray-400 hover:text-green-600 hover:bg-green-50"
-                    title="复制"
-                  >
-                    <Copy className="h-4 w-4" />
-                  </button>
-                  {!t.isPreset && (
+                  <Tooltip content="编辑">
                     <button
-                      onClick={(e) => { e.stopPropagation(); handleDelete(t.id, t.name); }}
-                      className="rounded p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50"
-                      title="删除"
+                      onClick={(e) => { e.stopPropagation(); navigate(`/cards/${t.id}/edit`); }}
+                      className="rounded p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50"
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Edit3 className="h-4 w-4" />
                     </button>
+                  </Tooltip>
+                  <Tooltip content="复制">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleDuplicate(t.id); }}
+                      className="rounded p-1.5 text-gray-400 hover:text-green-600 hover:bg-green-50"
+                    >
+                      <Copy className="h-4 w-4" />
+                    </button>
+                  </Tooltip>
+                  {!t.isPreset && (
+                    <Tooltip content="删除">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleDelete(t.id, t.name); }}
+                        className="rounded p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </Tooltip>
                   )}
                 </div>
               </div>

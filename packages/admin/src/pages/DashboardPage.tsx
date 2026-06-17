@@ -1,33 +1,33 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { FileText, FolderTree, Image, Blocks } from 'lucide-react';
+import { FileText, FolderTree, Image, Tag } from 'lucide-react';
 import { fetchAPI } from '@/lib/api-client';
 
 interface Stats {
   posts: number;
   categories: number;
   media: number;
-  blocks: number;
+  tags: number;
 }
 
 export function DashboardPage() {
-  const [stats, setStats] = useState<Stats>({ posts: 0, categories: 0, media: 0, blocks: 0 });
+  const [stats, setStats] = useState<Stats>({ posts: 0, categories: 0, media: 0, tags: 0 });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function load() {
       try {
-        const [postsRes, catsRes, mediaRes, blocksRes] = await Promise.all([
+        const [postsRes, catsRes, mediaRes, tagsRes] = await Promise.all([
           fetchAPI<{ total: number }>('/posts'),
-          fetchAPI<{ total: number }>('/categories'),
-          fetchAPI<{ total: number }>('/media'),
-          fetchAPI<unknown[]>('/page-blocks?pageType=home'),
+          fetchAPI<unknown[]>('/categories?all=true'),
+          fetchAPI<{ data: unknown[] }>('/media?pageSize=1'),
+          fetchAPI<unknown[]>('/tags'),
         ]);
         setStats({
           posts: postsRes.total || 0,
-          categories: catsRes.total || 0,
-          media: mediaRes.total || 0,
-          blocks: Array.isArray(blocksRes) ? blocksRes.length : 0,
+          categories: Array.isArray(catsRes) ? catsRes.length : 0,
+          media: (mediaRes as { total?: number })?.total || 0,
+          tags: Array.isArray(tagsRes) ? tagsRes.length : 0,
         });
       } catch (err) {
         console.error('Failed to load stats:', err);

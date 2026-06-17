@@ -8,10 +8,11 @@ export const postService = {
     featured?: boolean;
     search?: string;
     tagId?: number;
+    tagSlug?: string;
     page?: number;
     pageSize?: number;
   }) {
-    const { siteId, categorySlug, status, featured, search, tagId, page = 1, pageSize = 20 } = params;
+    const { siteId, categorySlug, status, featured, search, tagId, tagSlug, page = 1, pageSize = 20 } = params;
     const skip = (page - 1) * pageSize;
 
     const where: Record<string, unknown> = {};
@@ -28,6 +29,10 @@ export const postService = {
         { content: { contains: search } },
         { excerpt: { contains: search } },
       ];
+    }
+    if (tagSlug) {
+      const tag = await prisma.tag.findUnique({ where: { slug: tagSlug } });
+      if (tag) where.tags = { some: { tagId: tag.id } };
     }
     if (tagId) {
       where.tags = { some: { tagId } };
@@ -83,9 +88,10 @@ export const postService = {
     status?: string;
     sortOrder?: number;
     categoryId: number;
-    authorId: string;
+    authorId?: string | null;
     seoTitle?: string | null;
     seoDesc?: string | null;
+    isPinned?: boolean;
     isFeatured?: boolean;
     tagIds?: number[];
   }) {
@@ -145,5 +151,21 @@ export const postService = {
       orderBy: { publishedAt: 'desc' },
       take: 10,
     });
+  },
+
+  async batchUpdateStatus(ids: number[], status: string) {
+    await prisma.post.updateMany({ where: { id: { in: ids } }, data: { status: status as never } });
+  },
+
+  async batchUpdatePinned(ids: number[], isPinned: boolean) {
+    await prisma.post.updateMany({ where: { id: { in: ids } }, data: { isPinned } });
+  },
+
+  async batchUpdateFeatured(ids: number[], isFeatured: boolean) {
+    await prisma.post.updateMany({ where: { id: { in: ids } }, data: { isFeatured } });
+  },
+
+  async batchDelete(ids: number[]) {
+    await prisma.post.deleteMany({ where: { id: { in: ids } } });
   },
 };

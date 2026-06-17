@@ -13,12 +13,13 @@
     "db:generate": "bunx prisma generate"
   },
   "dependencies": {
-    "@prisma/client": "^6.5.0",
-    "elysia": "^1.2.25",
     "@elysiajs/cors": "^1.2.0",
     "@elysiajs/jwt": "^1.2.0",
+    "@prisma/client": "^6.5.0",
     "bcryptjs": "^2.4.3",
+    "elysia": "^1.2.25",
     "jose": "^5.9.6",
+    "marked": "^18.0.5",
     "multer": "^1.4.5-lts.1",
     "sharp": "^0.33.5"
   },

@@ -18,6 +18,7 @@ export const postRoutes = new Elysia({ prefix: '/api/posts' })
       featured: q.featured === undefined ? undefined : q.featured === 'true',
       search: q.search,
       tagId: q.tagId ? Number(q.tagId) : undefined,
+      tagSlug: q.tagSlug || undefined,
       page: q.page ? Number(q.page) : 1,
       pageSize: q.pageSize ? Number(q.pageSize) : 20,
     });
@@ -50,21 +51,18 @@ export const postRoutes = new Elysia({ prefix: '/api/posts' })
         body: t.Object({
           title: t.String(), slug: t.String(), content: t.String(),
           excerpt: t.Optional(t.Nullable(t.String())), coverImage: t.Optional(t.Nullable(t.String())),
-          status: t.Optional(t.String()), sortOrder: t.Optional(t.Number()), categoryId: t.Number(),
+          status: t.Optional(t.String()), sortOrder: t.Optional(t.Number()),
+          categoryId: t.Optional(t.Nullable(t.Number())),
+          authorId: t.Optional(t.Nullable(t.String())),
           seoTitle: t.Optional(t.Nullable(t.String())), seoDesc: t.Optional(t.Nullable(t.String())),
-          isFeatured: t.Optional(t.Boolean()), tagIds: t.Optional(t.Array(t.Number())),
+          isPinned: t.Optional(t.Boolean()), isFeatured: t.Optional(t.Boolean()), tagIds: t.Optional(t.Array(t.Number())),
+          publishedAt: t.Optional(t.Nullable(t.String())),
         }),
       })
       .put('/by-id/:id', async (ctx) => {
         return postService.update(Number((S(ctx).params as Record<string, string>).id), S(ctx).body as Record<string, unknown>);
       }, {
-        body: t.Object({
-          title: t.Optional(t.String()), slug: t.Optional(t.String()), content: t.Optional(t.String()),
-          excerpt: t.Optional(t.Nullable(t.String())), coverImage: t.Optional(t.Nullable(t.String())),
-          status: t.Optional(t.String()), sortOrder: t.Optional(t.Number()), categoryId: t.Optional(t.Number()),
-          seoTitle: t.Optional(t.Nullable(t.String())), seoDesc: t.Optional(t.Nullable(t.String())),
-          isFeatured: t.Optional(t.Boolean()), tagIds: t.Optional(t.Array(t.Number())),
-        }),
+        body: t.Record(t.String(), t.Any()),
       })
       .delete('/by-id/:id', async (ctx) => {
         return postService.delete(Number((S(ctx).params as Record<string, string>).id));
@@ -74,6 +72,30 @@ export const postRoutes = new Elysia({ prefix: '/api/posts' })
         return { success: true };
       }, {
         body: t.Object({ items: t.Array(t.Object({ id: t.Number(), sortOrder: t.Number() })) }),
+      })
+      .post('/batch', async (ctx) => {
+        const b = S(ctx).body as { ids: number[]; action: string };
+        if (!b.ids?.length) throw new Error('No IDs provided');
+        if (b.action === 'publish') {
+          await postService.batchUpdateStatus(b.ids, 'PUBLISHED');
+        } else if (b.action === 'unpublish') {
+          await postService.batchUpdateStatus(b.ids, 'DRAFT');
+        } else if (b.action === 'pin') {
+          await postService.batchUpdatePinned(b.ids, true);
+        } else if (b.action === 'unpin') {
+          await postService.batchUpdatePinned(b.ids, false);
+        } else if (b.action === 'feature') {
+          await postService.batchUpdateFeatured(b.ids, true);
+        } else if (b.action === 'unfeature') {
+          await postService.batchUpdateFeatured(b.ids, false);
+        } else if (b.action === 'delete') {
+          await postService.batchDelete(b.ids);
+        } else {
+          throw new Error('Invalid action');
+        }
+        return { success: true };
+      }, {
+        body: t.Object({ ids: t.Array(t.Number()), action: t.String() }),
       })
   );
 

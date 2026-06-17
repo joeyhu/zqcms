@@ -3,6 +3,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import { fetchAPI } from "@/lib/api-client";
 import type { Category } from "@zqcms/shared/types";
 import { TreeSelect } from "@/components/ui/TreeSelect";
+import { IconPicker } from "@/components/ui/IconPicker";
+import { getIconComponent } from "@/lib/icons";
 import toast from "react-hot-toast";
 
 export function CategoryFormPage() {
@@ -15,6 +17,8 @@ export function CategoryFormPage() {
   const [slug, setSlug] = useState("");
   const [description, setDescription] = useState("");
   const [url, setUrl] = useState("");
+  const [icon, setIcon] = useState("");
+  const [showIconPicker, setShowIconPicker] = useState(false);
   const [parentId, setParentId] = useState<number | null>(null);
   const [isVisible, setIsVisible] = useState(true);
   const [sortOrder, setSortOrder] = useState(0);
@@ -31,6 +35,7 @@ export function CategoryFormPage() {
         setSlug(cat.slug);
         setDescription(cat.description || "");
         setUrl(cat.url || "");
+        setIcon(cat.icon || "");
         setParentId(cat.parentId || null);
         setIsVisible(cat.isVisible);
         setSortOrder(cat.sortOrder);
@@ -47,6 +52,7 @@ export function CategoryFormPage() {
       slug,
       description: description || null,
       url: url || null,
+      icon: icon || null,
       parentId,
       isVisible,
       sortOrder,
@@ -122,6 +128,26 @@ export function CategoryFormPage() {
             required
             className="block w-full rounded-lg border px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
           />
+          <p className="mt-1 text-xs text-gray-400">URL 中的唯一标识，如 docs、blog，建议用英文和连字符</p>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">图标</label>
+          <button type="button" onClick={() => setShowIconPicker(true)}
+            className="flex items-center gap-2 w-full rounded-lg border px-3 py-2 text-sm hover:border-blue-400 transition-colors text-left">
+            {icon ? (
+              <>
+                <span className="flex items-center justify-center w-6 h-6 rounded bg-gray-100">
+                  {(() => { const Ico = getIconComponent(icon); return Ico ? <Ico className="h-4 w-4 text-gray-600" /> : null; })()}
+                </span>
+                <span className="text-gray-700">{icon}</span>
+              </>
+            ) : (
+              <span className="text-gray-400">点击选择图标</span>
+            )}
+          </button>
+          {showIconPicker && (
+            <IconPicker value={icon} onChange={setIcon} onClose={() => setShowIconPicker(false)} />
+          )}
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">

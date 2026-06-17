@@ -5,10 +5,12 @@ import {
 } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Plus, Edit3, Trash2, Layout, GripVertical } from 'lucide-react';
+import { Plus, Edit3, Trash2, Layout, GripVertical, Folder } from 'lucide-react';
 import { fetchAPI } from '@/lib/api-client';
 import type { Category } from '@zqcms/shared/types';
 import { useConfirm } from '@/components/ui/ConfirmDialog';
+import { Tooltip } from '@/components/ui/Tooltip';
+import { getIconComponent } from '@/lib/icons';
 import toast from 'react-hot-toast';
 
 // ── Helpers ──
@@ -78,13 +80,17 @@ function SortableRow({
     >
       {/* Drag handle + name */}
       <div className="flex items-center gap-2 min-w-0 flex-1" style={{ paddingLeft: `${item.depth * 24}px` }}>
-        <button
-          {...attributes}
-          {...listeners}
-          className="cursor-grab text-gray-300 hover:text-gray-500 flex-shrink-0 group-hover:opacity-100 opacity-0 transition-opacity"
-        >
-          <GripVertical className="h-4 w-4" />
-        </button>
+        <Tooltip content="拖拽排序">
+          <button
+            {...attributes}
+            {...listeners}
+            className="cursor-grab text-gray-300 hover:text-gray-500 flex-shrink-0 group-hover:opacity-100 opacity-0 transition-opacity"
+          >
+            <GripVertical className="h-4 w-4" />
+          </button>
+        </Tooltip>
+        {/* Icon */}
+        {(() => { const IconComp = cat.icon ? getIconComponent(cat.icon) : null; return IconComp ? <IconComp className="h-4 w-4 text-gray-400 flex-shrink-0" /> : <Folder className="h-4 w-4 text-gray-300 flex-shrink-0" />; })()}
         <span className="font-medium text-gray-900 truncate">{cat.name}</span>
         <span className="text-xs text-gray-400 flex-shrink-0 hidden sm:inline">/{fullSlug}</span>
         {cat._count && (
@@ -98,14 +104,18 @@ function SortableRow({
           className="rounded p-1 text-gray-300 hover:text-purple-600">
           <Layout className="h-4 w-4" />
         </button>
-        <button onClick={() => navigate(`/categories/${cat.id}/edit`)} title="编辑"
-          className="rounded p-1 text-gray-300 hover:text-blue-600">
-          <Edit3 className="h-4 w-4" />
-        </button>
-        <button onClick={() => onDelete(cat.id, cat.name)} title="删除"
-          className="rounded p-1 text-gray-300 hover:text-red-600">
-          <Trash2 className="h-4 w-4" />
-        </button>
+        <Tooltip content="编辑">
+          <button onClick={() => navigate(`/categories/${cat.id}/edit`)}
+            className="rounded p-1 text-gray-300 hover:text-blue-600">
+            <Edit3 className="h-4 w-4" />
+          </button>
+        </Tooltip>
+        <Tooltip content="删除">
+          <button onClick={() => onDelete(cat.id, cat.name)}
+            className="rounded p-1 text-gray-300 hover:text-red-600">
+            <Trash2 className="h-4 w-4" />
+          </button>
+        </Tooltip>
       </div>
     </div>
   );

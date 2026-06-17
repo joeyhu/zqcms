@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Plus, Edit3, Trash2, Lock, Copy, Layout } from 'lucide-react';
 import { fetchAPI } from '@/lib/api-client';
 import { useConfirm } from '@/components/ui/ConfirmDialog';
+import { Tooltip } from '@/components/ui/Tooltip';
 import type { BlockTemplate } from '@zqcms/shared/types';
 import toast from 'react-hot-toast';
 
@@ -84,19 +85,25 @@ export function BlockTemplateListPage() {
                   🖥{t.columns.desktop} 📱{t.columns.tablet} 📱{t.columns.mobile} 列
                 </span>
                 <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity relative z-10">
-                  <button onClick={(e) => { e.stopPropagation(); navigate(`/blocks/${t.id}/edit`); }}
-                    className="rounded p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50" title="编辑">
-                    <Edit3 className="h-4 w-4" />
-                  </button>
-                  <button onClick={(e) => { e.stopPropagation(); handleDuplicate(t.id); }}
-                    className="rounded p-1.5 text-gray-400 hover:text-green-600 hover:bg-green-50" title="复制">
-                    <Copy className="h-4 w-4" />
-                  </button>
-                  {!t.isPreset && (
-                    <button onClick={(e) => { e.stopPropagation(); handleDelete(t.id, t.name); }}
-                      className="rounded p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50" title="删除">
-                      <Trash2 className="h-4 w-4" />
+                  <Tooltip content="编辑">
+                    <button onClick={(e) => { e.stopPropagation(); navigate(`/blocks/${t.id}/edit`); }}
+                      className="rounded p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50">
+                      <Edit3 className="h-4 w-4" />
                     </button>
+                  </Tooltip>
+                  <Tooltip content="复制">
+                    <button onClick={(e) => { e.stopPropagation(); handleDuplicate(t.id); }}
+                      className="rounded p-1.5 text-gray-400 hover:text-green-600 hover:bg-green-50">
+                      <Copy className="h-4 w-4" />
+                    </button>
+                  </Tooltip>
+                  {!t.isPreset && (
+                    <Tooltip content="删除">
+                      <button onClick={(e) => { e.stopPropagation(); handleDelete(t.id, t.name); }}
+                        className="rounded p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50">
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </Tooltip>
                   )}
                 </div>
               </div>

@@ -22,6 +22,7 @@ import type {
   CardElementType,
 } from "@zqcms/shared/types";
 import { CardPreview, ICON_OPTIONS } from "@/components/builder/CardPreview";
+import { Tooltip } from "@/components/ui/Tooltip";
 import toast from "react-hot-toast";
 
 const DEFAULT_CFG: CardTemplateConfig = {
@@ -144,14 +145,16 @@ function SortableOrderItem({
       style={{ transform: CSS.Transform.toString(transform), transition }}
       className={`flex items-center gap-2 rounded border bg-white px-2 py-1.5 text-xs transition-opacity ${!enabled ? 'opacity-40' : ''}`}
     >
-      <button
-        {...attributes}
-        {...listeners}
-        className="cursor-grab text-gray-300 hover:text-gray-500"
-        disabled={!enabled}
-      >
-        <GripVertical className="h-3.5 w-3.5" />
-      </button>
+      <Tooltip content="拖拽排序">
+        <button
+          {...attributes}
+          {...listeners}
+          className="cursor-grab text-gray-300 hover:text-gray-500"
+          disabled={!enabled}
+        >
+          <GripVertical className="h-3.5 w-3.5" />
+        </button>
+      </Tooltip>
       <span className="text-gray-700 flex-1">{label}</span>
       {/* Toggle switch */}
       <button
@@ -654,13 +657,15 @@ export function CardTemplateFormPage() {
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] text-gray-400">标签内容</span>
-                    <button
-                      type="button"
-                      onClick={addTagItem}
-                      className="text-xs text-blue-600 hover:text-blue-800"
-                    >
-                      <Plus className="h-3 w-3 inline" />
-                    </button>
+                    <Tooltip content="添加">
+                      <button
+                        type="button"
+                        onClick={addTagItem}
+                        className="text-xs text-blue-600 hover:text-blue-800"
+                      >
+                        <Plus className="h-3 w-3 inline" />
+                      </button>
+                    </Tooltip>
                   </div>
                   {cfg.tags.items.map((item, i) => (
                     <div key={i} className="flex gap-1">
@@ -670,12 +675,14 @@ export function CardTemplateFormPage() {
                         placeholder={`标签 ${i + 1}`}
                         className="flex-1 rounded border px-2 py-1 text-xs"
                       />
-                      <button
-                        onClick={() => removeTagItem(i)}
-                        className="text-gray-300 hover:text-red-500"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
+                      <Tooltip content="删除">
+                        <button
+                          onClick={() => removeTagItem(i)}
+                          className="text-gray-300 hover:text-red-500"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </Tooltip>
                     </div>
                   ))}
                 </div>

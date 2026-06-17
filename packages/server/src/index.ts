@@ -13,6 +13,8 @@ import { sitemapRoutes } from './routes/sitemap';
 import { siteManageRoutes } from './routes/sites-manage';
 import { cardTemplateRoutes } from './routes/card-templates';
 import { blockTemplateRoutes } from './routes/block-templates';
+import { llmRoutes } from './routes/llm';
+import { publishRoutes } from './routes/publish';
 import type { SiteContext } from './middleware/site';
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
@@ -125,6 +127,8 @@ const app = new Elysia()
   .use(pageBlockRoutes)
   .use(cardTemplateRoutes)
   .use(blockTemplateRoutes)
+  .use(llmRoutes)
+  .use(publishRoutes)
   .use(tagRoutes)
   .use(sitemapRoutes)
 

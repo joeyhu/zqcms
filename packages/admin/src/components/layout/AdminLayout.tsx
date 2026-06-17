@@ -15,7 +15,10 @@ import {
   FolderOpen,
   Layers,
   Layout,
+  Grid3X3,
   Tags,
+  Bot,
+  Send,
 } from "lucide-react";
 import { logout } from "@/lib/auth";
 import { fetchAPI, setCurrentSiteId, getCurrentSiteId } from "@/lib/api-client";
@@ -23,16 +26,19 @@ import { useConfirm } from "@/components/ui/ConfirmDialog";
 
 const navItems = [
   { to: "/dashboard", icon: LayoutDashboard, label: "仪表盘" },
-  { to: "/posts", icon: FileText, label: "文章管理" },
   { to: "/categories", icon: FolderTree, label: "目录管理" },
+  { to: "/posts", icon: FileText, label: "文章管理" },
   { to: "/tags", icon: Tags, label: "标签管理" },
   { to: "/pages/home", icon: Blocks, label: "首页搭建" },
   { to: "/pages/category", icon: FolderOpen, label: "目录页模板" },
   { to: "/pages/subcategory", icon: Layers, label: "子目录页模板" },
   { to: "/cards", icon: Layout, label: "卡片管理" },
   { to: "/blocks", icon: Blocks, label: "区块管理" },
+  { to: "/icons", icon: Grid3X3, label: "图标管理" },
   { to: "/media", icon: Image, label: "媒体库" },
   { to: "/settings", icon: Settings, label: "站点配置" },
+  { to: "/settings/llm", icon: Bot, label: "LLM 设置" },
+  { to: "/publish", icon: Send, label: "内容平台" },
   { to: "/sites", icon: Globe, label: "站点管理" },
 ];
 
@@ -85,7 +91,10 @@ export function AdminLayout() {
   };
 
   const handleLogout = async () => {
-    const ok = await confirm({ title: '退出登录', message: '确定要退出当前账号吗？' });
+    const ok = await confirm({
+      title: "退出登录",
+      message: "确定要退出当前账号吗？",
+    });
     if (!ok) return;
     logout();
     navigate("/login");
@@ -105,7 +114,7 @@ export function AdminLayout() {
             <NavLink
               key={item.to}
               to={item.to}
-              end={item.to === "/dashboard"}
+              end={item.to === "/dashboard" || item.to === "/settings"}
               className={({ isActive }) =>
                 `flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
                   isActive

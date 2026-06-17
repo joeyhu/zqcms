@@ -3,6 +3,7 @@ import { Upload, Trash2, Copy, Image as ImageIcon, Eye, X } from 'lucide-react';
 import { fetchAPI, uploadFile } from '@/lib/api-client';
 import type { Media, PaginatedResponse } from '@zqcms/shared/types';
 import { useConfirm } from '@/components/ui/ConfirmDialog';
+import { Tooltip } from '@/components/ui/Tooltip';
 import toast from 'react-hot-toast';
 
 const API_ORIGIN = 'http://localhost:11003';
@@ -111,27 +112,30 @@ export function MediaPage() {
                   </div>
                 )}
                 <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/0 group-hover:bg-black/30 transition-colors opacity-0 group-hover:opacity-100">
-                  <button
-                    onClick={() => setPreviewUrl(`${API_ORIGIN}${item.url}`)}
-                    className="rounded-lg bg-white/90 p-2 text-gray-700 hover:bg-white"
-                    title="查看原图"
-                  >
-                    <Eye className="h-4 w-4" />
-                  </button>
-                  <button
-                    onClick={() => copyUrl(item.url)}
-                    className="rounded-lg bg-white/90 p-2 text-gray-700 hover:bg-white"
-                    title="复制路径"
-                  >
-                    <Copy className="h-4 w-4" />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(item.id)}
-                    className="rounded-lg bg-red-500/90 p-2 text-white hover:bg-red-500"
-                    title="删除"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
+                  <Tooltip content="查看原图">
+                    <button
+                      onClick={() => setPreviewUrl(`${API_ORIGIN}${item.url}`)}
+                      className="rounded-lg bg-white/90 p-2 text-gray-700 hover:bg-white"
+                    >
+                      <Eye className="h-4 w-4" />
+                    </button>
+                  </Tooltip>
+                  <Tooltip content="复制路径">
+                    <button
+                      onClick={() => copyUrl(item.url)}
+                      className="rounded-lg bg-white/90 p-2 text-gray-700 hover:bg-white"
+                    >
+                      <Copy className="h-4 w-4" />
+                    </button>
+                  </Tooltip>
+                  <Tooltip content="删除">
+                    <button
+                      onClick={() => handleDelete(item.id)}
+                      className="rounded-lg bg-red-500/90 p-2 text-white hover:bg-red-500"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </Tooltip>
                 </div>
               </div>
               <p className="mt-2 truncate px-1 text-xs text-gray-500">{item.filename}</p>
@@ -143,12 +147,14 @@ export function MediaPage() {
       {/* Full Image Preview Modal */}
       {previewUrl && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
-          <button
-            onClick={() => setPreviewUrl(null)}
-            className="absolute top-4 right-4 rounded-full bg-white/10 p-2 text-white hover:bg-white/20 transition-colors"
-          >
-            <X className="h-5 w-5" />
-          </button>
+          <Tooltip content="关闭预览">
+            <button
+              onClick={() => setPreviewUrl(null)}
+              className="absolute top-4 right-4 rounded-full bg-white/10 p-2 text-white hover:bg-white/20 transition-colors"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </Tooltip>
           <img
             src={previewUrl}
             alt="预览"

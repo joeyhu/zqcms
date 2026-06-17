@@ -31,6 +31,7 @@ import { BlockType } from "@zqcms/shared/types";
 import { BLOCK_TYPE_LABELS, CARD_STYLE_PRESETS, SHADOW_OPTIONS, BORDER_RADIUS_OPTIONS, ALIGN_OPTIONS, RESPONSIVE_COLUMNS_DEFAULTS } from "@zqcms/shared/constants";
 import { BlockPreview } from "@/components/builder/BlockPreview";
 import { useConfirm } from "@/components/ui/ConfirmDialog";
+import { Tooltip } from "@/components/ui/Tooltip";
 import toast from "react-hot-toast";
 
 // ============================================================
@@ -460,14 +461,16 @@ function SortableBlockItem({
       onClick={onSelect}
       className={`flex items-center gap-2 rounded-lg border p-2.5 cursor-pointer transition-all ${activeClass} ${dimmedClass}`}
     >
-      <button
-        {...attributes}
-        {...listeners}
-        className="cursor-grab text-gray-300 hover:text-gray-500 flex-shrink-0"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <GripVertical className="h-4 w-4" />
-      </button>
+      <Tooltip content="拖拽排序">
+        <button
+          {...attributes}
+          {...listeners}
+          className="cursor-grab text-gray-300 hover:text-gray-500 flex-shrink-0"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <GripVertical className="h-4 w-4" />
+        </button>
+      </Tooltip>
 
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5">

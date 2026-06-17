@@ -30,14 +30,18 @@ export function BreadcrumbWrapper({ categories }: BreadcrumbWrapperProps) {
     accumulatedPath += `/${seg}`;
 
     if (i === segments.length - 1 && segments.length >= 2) {
-      // 最后一段可能是文章 slug，尝试找对应的目录，否则当作标题
-      const cat = categories.find((c) => c.slug === seg);
-      if (cat) {
-        items.push({ label: cat.name, href: accumulatedPath });
+      // 最后一段可能是文章 ID（纯数字）或子目录 slug
+      if (/^\d+$/.test(seg)) {
+        // 数字 ID → 文章详情页
+        items.push({ label: '文章内容' });
       } else {
-        // 找不到对应目录 → 可能是文章标题，显示 slug 作为名称（不设链接，表示当前页）
-        const displayName = seg.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
-        items.push({ label: displayName });
+        const cat = categories.find((c) => c.slug === seg || c.slug.endsWith(`/${seg}`));
+        if (cat) {
+          items.push({ label: cat.name, href: accumulatedPath });
+        } else {
+          const displayName = seg.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+          items.push({ label: displayName });
+        }
       }
     } else {
       const cat = categories.find((c) => c.slug === seg || c.slug.endsWith(`/${seg}`));

@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Plus, Edit3, Trash2, Globe, ExternalLink } from 'lucide-react';
 import { fetchAPI, setCurrentSiteId } from '@/lib/api-client';
 import { useConfirm } from '@/components/ui/ConfirmDialog';
+import { Tooltip } from '@/components/ui/Tooltip';
 import toast from 'react-hot-toast';
 
 interface SiteItem {
@@ -103,18 +104,22 @@ export function SitesPage() {
                 >
                   切换管理
                 </button>
-                <button
-                  onClick={() => navigate(`/sites/${site.id}/edit`)}
-                  className="rounded-lg border px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50"
-                >
-                  <Edit3 className="h-4 w-4" />
-                </button>
-                <button
-                  onClick={() => handleDelete(site.id, site.name)}
-                  className="rounded-lg border px-3 py-1.5 text-sm text-red-500 hover:bg-red-50"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
+                <Tooltip content="编辑站点">
+                  <button
+                    onClick={() => navigate(`/sites/${site.id}/edit`)}
+                    className="rounded-lg border px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50"
+                  >
+                    <Edit3 className="h-4 w-4" />
+                  </button>
+                </Tooltip>
+                <Tooltip content="删除站点">
+                  <button
+                    onClick={() => handleDelete(site.id, site.name)}
+                    className="rounded-lg border px-3 py-1.5 text-sm text-red-500 hover:bg-red-50"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </Tooltip>
               </div>
             </div>
           ))}

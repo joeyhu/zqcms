@@ -55,6 +55,7 @@ export function TagFormPage() {
           <label className="block text-sm font-medium text-gray-700 mb-1">Slug</label>
           <input value={slug} onChange={(e) => setSlug(e.target.value)} required
             className="block w-full rounded-lg border px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none" />
+          <p className="mt-1 text-xs text-gray-400">URL 中的标签标识，如 javascript、frontend，建议用英文和连字符</p>
         </div>
         <button type="submit" disabled={saving}
           className="rounded-lg bg-blue-600 px-6 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50">

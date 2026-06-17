@@ -19,6 +19,9 @@ import { CardTemplateListPage } from './pages/CardTemplateListPage';
 import { CardTemplateFormPage } from './pages/CardTemplateFormPage';
 import { BlockTemplateListPage } from './pages/BlockTemplateListPage';
 import { BlockTemplateFormPage } from './pages/BlockTemplateFormPage';
+import { IconListPage } from './pages/IconListPage';
+import { LlmConfigPage } from './pages/LlmConfigPage';
+import { PublishPlatformPage } from './pages/PublishPlatformPage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const token = localStorage.getItem('zqcms_token');
@@ -53,6 +56,8 @@ export function App() {
           <Route path="pages/category" element={<PageBuilderPage />} />
           <Route path="pages/subcategory" element={<PageBuilderPage />} />
           <Route path="settings" element={<SettingsPage />} />
+          <Route path="settings/llm" element={<LlmConfigPage />} />
+          <Route path="publish" element={<PublishPlatformPage />} />
           <Route path="media" element={<MediaPage />} />
           <Route path="sites" element={<SitesPage />} />
           <Route path="sites/new" element={<SiteFormPage />} />
@@ -66,6 +71,7 @@ export function App() {
           <Route path="blocks" element={<BlockTemplateListPage />} />
           <Route path="blocks/new" element={<BlockTemplateFormPage />} />
           <Route path="blocks/:id/edit" element={<BlockTemplateFormPage />} />
+          <Route path="icons" element={<IconListPage />} />
         </Route>
       </Routes>
       </ConfirmProvider>

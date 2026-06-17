@@ -28,8 +28,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   // Post page
   if (slug.length >= 2) {
     const categorySlug = slug[slug.length - 2];
-    const postSlug = slug[slug.length - 1];
-    const post = await fetchAPI<Post | null>(`/posts/${categorySlug}/${postSlug}`).catch(() => null);
+    const lastSegment = slug[slug.length - 1];
+    const isNumericId = /^\d+$/.test(lastSegment);
+    const post = await fetchAPI<Post | null>(
+      isNumericId ? `/posts/by-id/${lastSegment}` : `/posts/${categorySlug}/${lastSegment}`
+    ).catch(() => null);
     if (post) {
       return {
         title: post.seoTitle || post.title,
@@ -112,14 +115,19 @@ export default async function CatchAllPage({ params }: PageProps) {
     return <CategoryFallbackLayout category={category} />;
   }
 
-  // Case 2: Two segments → Post page (e.g., /docs/getting-started)
-  // The last segment is the post slug, second-to-last is the category slug
+  // Case 2: Two segments → Post page (e.g., /docs/42 or /docs/getting-started)
   const categorySlug = slug[slug.length - 2];
-  const postSlug = slug[slug.length - 1];
+  const lastSegment = slug[slug.length - 1];
+  const isNumericId = /^\d+$/.test(lastSegment);
 
-  const post = await fetchAPI<Post | null>(
-    `/posts/${categorySlug}/${postSlug}`
-  ).catch(() => null);
+  let post: Post | null = null;
+  if (isNumericId) {
+    // URL 使用数字 ID /docs/42
+    post = await fetchAPI<Post | null>(`/posts/by-id/${lastSegment}`).catch(() => null);
+  } else {
+    // 兼容旧版 slug URL /docs/getting-started
+    post = await fetchAPI<Post | null>(`/posts/${categorySlug}/${lastSegment}`).catch(() => null);
+  }
 
   if (!post) {
     // Maybe it's a nested category page? Try fetching as a category

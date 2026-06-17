@@ -19,4 +19,10 @@ export const tagRoutes = new Elysia({ prefix: '/api/tags' })
       .delete('/:id', async ({ params }) => {
         return tagService.delete(Number(params.id));
       })
+      .post('/batch-create', async ({ body }) => {
+        const b = body as { names: string[] };
+        return tagService.batchCreate(b.names || []);
+      }, {
+        body: t.Object({ names: t.Array(t.String()) }),
+      })
   );

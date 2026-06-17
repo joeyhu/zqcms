@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Plus, Edit3, Trash2 } from 'lucide-react';
 import { fetchAPI } from '@/lib/api-client';
 import { useConfirm } from '@/components/ui/ConfirmDialog';
+import { Tooltip } from '@/components/ui/Tooltip';
 import type { Tag } from '@zqcms/shared/types';
 import toast from 'react-hot-toast';
 
@@ -57,12 +58,16 @@ export function TagListPage() {
                 {tag._count && <span className="ml-2 text-xs text-gray-400">({tag._count.posts} 篇)</span>}
               </div>
               <div className="flex gap-2">
-                <button onClick={() => navigate(`/tags/${tag.id}/edit`)} className="rounded p-1 text-gray-400 hover:text-blue-600">
-                  <Edit3 className="h-4 w-4" />
-                </button>
-                <button onClick={() => handleDelete(tag.id, tag.name)} className="rounded p-1 text-gray-400 hover:text-red-600">
-                  <Trash2 className="h-4 w-4" />
-                </button>
+                <Tooltip content="编辑标签">
+                  <button onClick={() => navigate(`/tags/${tag.id}/edit`)} className="rounded p-1 text-gray-400 hover:text-blue-600">
+                    <Edit3 className="h-4 w-4" />
+                  </button>
+                </Tooltip>
+                <Tooltip content="删除标签">
+                  <button onClick={() => handleDelete(tag.id, tag.name)} className="rounded p-1 text-gray-400 hover:text-red-600">
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </Tooltip>
               </div>
             </div>
           ))}

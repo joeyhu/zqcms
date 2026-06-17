@@ -43,8 +43,13 @@ export async function fetchAPI<T>(endpoint: string, options: RequestInit = {}): 
   if (!res.ok) {
     let error = 'Request failed';
     try {
-      const errBody = await res.json();
-      error = errBody.error || errBody.message || error;
+      const text = await res.text();
+      try {
+        const errBody = JSON.parse(text);
+        error = errBody.error || errBody.message || error;
+      } catch {
+        error = text || error;
+      }
     } catch { /* ignore */ }
     throw new Error(error);
   }
@@ -63,7 +68,10 @@ export async function uploadFile(endpoint: string, formData: FormData): Promise<
   const res = await fetch(`${API_BASE}${endpoint}`, { method: 'POST', headers, body: formData });
   if (!res.ok) {
     let error = 'Upload failed';
-    try { const errBody = await res.json(); error = errBody.error || error; } catch { /* */ }
+    try {
+      const text = await res.text();
+      try { const errBody = JSON.parse(text); error = errBody.error || error; } catch { error = text || error; }
+    } catch { /* */ }
     throw new Error(error);
   }
   return res.json();

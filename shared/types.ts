@@ -118,6 +118,7 @@ export interface Post {
   seoTitle: string | null;
   seoDesc: string | null;
   viewCount: number;
+  isPinned: boolean;
   isFeatured: boolean;
   publishedAt: string | null;
   createdAt: string;
@@ -133,8 +134,10 @@ export interface PostInput {
   status?: PostStatus;
   sortOrder?: number;
   categoryId?: number | null;
+  authorId?: string | null;
   seoTitle?: string | null;
   seoDesc?: string | null;
+  isPinned?: boolean;
   isFeatured?: boolean;
   publishedAt?: string | null;
   tagIds?: number[];
@@ -304,4 +307,82 @@ export interface CardTemplate {
   sortOrder: number;
   createdAt: string;
   updatedAt: string;
+}
+
+// ---------- LLM Config ----------
+export interface LlmConfig {
+  id: number;
+  name: string;
+  provider: string;
+  apiKey: string;
+  baseUrl: string;
+  model: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface LlmConfigInput {
+  name: string;
+  provider: string;
+  apiKey: string;
+  baseUrl: string;
+  model: string;
+  isActive?: boolean;
+}
+
+// ---------- LLM Assist ----------
+export type LlmAssistAction = 'generate' | 'summarize' | 'extractTags' | 'classify' | 'generateTitle' | 'format' | 'generateSeo';
+
+export interface LlmAssistRequest {
+  action: LlmAssistAction;
+  content: string;
+  title?: string;
+  categories?: string[];
+  existingTags?: string[];
+}
+
+export interface LlmAssistResponse {
+  success: boolean;
+  result?: string;
+  tags?: string[];
+  category?: string;
+  seoTitle?: string;
+  seoDesc?: string;
+  error?: string;
+}
+
+// ---------- Publish Platform ----------
+export interface PublishPlatform {
+  id: number;
+  name: string;
+  platform: string;
+  appId: string;
+  appSecret: string;
+  qrcode: string | null;
+  description: string | null;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PublishPlatformInput {
+  name: string;
+  platform: string;
+  appId: string;
+  appSecret: string;
+  qrcode?: string | null;
+  description?: string | null;
+  isActive?: boolean;
+}
+
+export interface PublishRecord {
+  id: number;
+  postId: number;
+  platformId: number;
+  platform?: PublishPlatform;
+  status: string;
+  publishId: string | null;
+  errorMsg: string | null;
+  createdAt: string;
 }
