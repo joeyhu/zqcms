@@ -191,6 +191,28 @@ export interface ReorderInput {
   items: { id: number; sortOrder: number }[];
 }
 
+// ---------- Feedback ----------
+export interface Feedback {
+  id: number;
+  siteId: number;
+  name: string;
+  phone: string | null;
+  email: string | null;
+  content: string;
+  pageUrl: string | null;
+  status: string; // pending | reviewed | resolved | closed
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface FeedbackInput {
+  name: string;
+  phone?: string | null;
+  email?: string | null;
+  content: string;
+  pageUrl?: string | null;
+}
+
 // ---------- LLM Config ----------
 export interface LlmConfig {
   id: number;

@@ -35,7 +35,8 @@ model Site {
 
   categories    Category[]
   posts         Post[]
-  media        Media[]
+  media         Media[]
+  feedback      Feedback[]
 
   @@index([domain])
   @@index([slug])
@@ -211,4 +212,25 @@ model PublishRecord {
 
   @@index([postId])
   @@index([platformId])
+}
+
+// ==========================================
+// 用户反馈建议
+// ==========================================
+model Feedback {
+  id        Int      @id @default(autoincrement())
+  siteId    Int
+  site      Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  name      String               // 用户姓名
+  phone     String?              // 联系电话
+  email     String?              // 联系邮箱
+  content   String   @db.Text    // 反馈内容
+  pageUrl   String?              // 提交反馈时的页面 URL
+  status    String   @default("pending") // pending | reviewed | resolved | closed
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([siteId])
+  @@index([status])
+  @@index([createdAt])
 }

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Plus, Edit3, Trash2, Globe, ExternalLink } from 'lucide-react';
-import { fetchAPI, setCurrentSiteId } from '@/lib/api-client';
+import { useNavigate } from 'react-router-dom';
+import { Plus, Trash2, Globe, CheckCircle2 } from 'lucide-react';
+import { fetchAPI, setCurrentSiteId, getCurrentSiteId } from '@/lib/api-client';
 import { useConfirm } from '@/components/ui/ConfirmDialog';
 import { Tooltip } from '@/components/ui/Tooltip';
 import toast from 'react-hot-toast';
@@ -21,6 +21,7 @@ export function SitesPage() {
   const confirm = useConfirm();
   const [sites, setSites] = useState<SiteItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentSiteId, setCurrent] = useState<number | null>(getCurrentSiteId());
 
   const loadSites = async () => {
     setLoading(true);
@@ -50,8 +51,8 @@ export function SitesPage() {
 
   const handleSwitch = (site: SiteItem) => {
     setCurrentSiteId(site.id);
-    navigate('/dashboard');
-    window.location.reload();
+    setCurrent(site.id);
+    toast.success(`已切换到「${site.name}」`);
   };
 
   if (loading) return <div className="py-12 text-center text-gray-400">加载中...</div>;
@@ -72,11 +73,26 @@ export function SitesPage() {
         <div className="py-12 text-center text-gray-400">暂无站点</div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {sites.map((site) => (
-            <div key={site.id} className="rounded-xl border bg-white p-5 shadow-sm hover:shadow-md transition-shadow">
+          {sites.map((site) => {
+            const isCurrent = site.id === currentSiteId;
+
+            return (
+            <div
+              key={site.id}
+              className={`rounded-xl border bg-white p-5 shadow-sm transition-shadow hover:shadow-md ${
+                isCurrent
+                  ? 'ring-2 ring-blue-500 border-blue-300 shadow-blue-100'
+                  : ''
+              }`}
+            >
               <div className="flex items-start justify-between mb-3">
                 <div>
-                  <h3 className="font-semibold text-lg text-gray-900">{site.name}</h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-semibold text-lg text-gray-900">{site.name}</h3>
+                    {isCurrent && (
+                      <CheckCircle2 className="h-5 w-5 text-blue-500 shrink-0" />
+                    )}
+                  </div>
                   <div className="flex items-center gap-1 mt-1 text-xs text-gray-400">
                     <Globe className="h-3 w-3" />
                     {site.domain}
@@ -104,14 +120,6 @@ export function SitesPage() {
                 >
                   切换管理
                 </button>
-                <Tooltip content="编辑站点">
-                  <button
-                    onClick={() => navigate(`/sites/${site.id}/edit`)}
-                    className="rounded-lg border px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50"
-                  >
-                    <Edit3 className="h-4 w-4" />
-                  </button>
-                </Tooltip>
                 <Tooltip content="删除站点">
                   <button
                     onClick={() => handleDelete(site.id, site.name)}
@@ -122,7 +130,8 @@ export function SitesPage() {
                 </Tooltip>
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

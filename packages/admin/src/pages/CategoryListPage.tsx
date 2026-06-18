@@ -1,17 +1,33 @@
-import { useEffect, useState, useMemo, useRef, useCallback } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useEffect, useState, useMemo, useRef, useCallback } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import {
-  DndContext, DragEndEvent, closestCenter, PointerSensor, useSensor, useSensors,
-} from '@dnd-kit/core';
-import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
-import { Plus, Edit3, Trash2, Layout, GripVertical, Folder } from 'lucide-react';
-import { fetchAPI } from '@/lib/api-client';
-import type { Category } from '@zqcms/shared/types';
-import { useConfirm } from '@/components/ui/ConfirmDialog';
-import { Tooltip } from '@/components/ui/Tooltip';
-import { getIconComponent } from '@/lib/icons';
-import toast from 'react-hot-toast';
+  DndContext,
+  DragEndEvent,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import {
+  Plus,
+  Edit3,
+  Trash2,
+  Layout,
+  GripVertical,
+  Folder,
+} from "lucide-react";
+import { fetchAPI } from "@/lib/api-client";
+import type { Category } from "@zqcms/shared/types";
+import { useConfirm } from "@/components/ui/ConfirmDialog";
+import { Tooltip } from "@/components/ui/Tooltip";
+import { getIconComponent } from "@/lib/icons";
+import toast from "react-hot-toast";
 
 // ── Helpers ──
 
@@ -41,7 +57,11 @@ interface FlatItem {
   parentSlug: string;
 }
 
-function flattenTree(nodes: Category[], depth: number, parentSlug: string): FlatItem[] {
+function flattenTree(
+  nodes: Category[],
+  depth: number,
+  parentSlug: string,
+): FlatItem[] {
   const result: FlatItem[] = [];
   for (const node of nodes) {
     const fullSlug = parentSlug ? `${parentSlug}/${node.slug}` : node.slug;
@@ -63,13 +83,16 @@ function SortableRow({
   onDelete: (id: number, name: string) => void;
 }) {
   const navigate = useNavigate();
-  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: item.id });
+  const { attributes, listeners, setNodeRef, transform, transition } =
+    useSortable({ id: item.id });
   const style = { transform: CSS.Transform.toString(transform), transition };
 
   const cat = item.category;
   const isSub = item.depth > 0;
-  const baseType = isSub ? 'subcategory' : 'category';
-  const fullSlug = item.parentSlug ? `${item.parentSlug}/${cat.slug}` : cat.slug;
+  const baseType = isSub ? "subcategory" : "category";
+  const fullSlug = item.parentSlug
+    ? `${item.parentSlug}/${cat.slug}`
+    : cat.slug;
   const pageUrl = `/pages/${baseType}?slug=${encodeURIComponent(fullSlug)}`;
 
   return (
@@ -79,7 +102,10 @@ function SortableRow({
       className="flex items-center justify-between rounded-lg px-3 py-1.5 hover:bg-gray-50 group"
     >
       {/* Drag handle + name */}
-      <div className="flex items-center gap-2 min-w-0 flex-1" style={{ paddingLeft: `${item.depth * 24}px` }}>
+      <div
+        className="flex items-center gap-2 min-w-0 flex-1"
+        style={{ paddingLeft: `${item.depth * 24}px` }}
+      >
         <Tooltip content="拖拽排序">
           <button
             {...attributes}
@@ -90,29 +116,40 @@ function SortableRow({
           </button>
         </Tooltip>
         {/* Icon */}
-        {(() => { const IconComp = cat.icon ? getIconComponent(cat.icon) : null; return IconComp ? <IconComp className="h-4 w-4 text-gray-400 flex-shrink-0" /> : <Folder className="h-4 w-4 text-gray-300 flex-shrink-0" />; })()}
+        {(() => {
+          const IconComp = cat.icon ? getIconComponent(cat.icon) : null;
+          return IconComp ? (
+            <IconComp className="h-4 w-4 text-gray-400 flex-shrink-0" />
+          ) : (
+            <Folder className="h-4 w-4 text-gray-300 flex-shrink-0" />
+          );
+        })()}
         <span className="font-medium text-gray-900 truncate">{cat.name}</span>
-        <span className="text-xs text-gray-400 flex-shrink-0 hidden sm:inline">/{fullSlug}</span>
+        <span className="text-xs text-gray-400 flex-shrink-0 hidden sm:inline">
+          /{fullSlug}
+        </span>
         {cat._count && (
-          <span className="text-xs text-gray-400 flex-shrink-0">({cat._count.posts} 篇)</span>
+          <span className="text-xs text-gray-400 flex-shrink-0">
+            ({cat._count.posts} 篇)
+          </span>
         )}
       </div>
 
       {/* Actions */}
       <div className="flex gap-1.5 flex-shrink-0">
-        <button onClick={() => navigate(pageUrl)} title="编辑页面布局"
-          className="rounded p-1 text-gray-300 hover:text-purple-600">
-          <Layout className="h-4 w-4" />
-        </button>
         <Tooltip content="编辑">
-          <button onClick={() => navigate(`/categories/${cat.id}/edit`)}
-            className="rounded p-1 text-gray-300 hover:text-blue-600">
+          <button
+            onClick={() => navigate(`/categories/${cat.id}/edit`)}
+            className="rounded p-1 text-gray-300 hover:text-blue-600"
+          >
             <Edit3 className="h-4 w-4" />
           </button>
         </Tooltip>
         <Tooltip content="删除">
-          <button onClick={() => onDelete(cat.id, cat.name)}
-            className="rounded p-1 text-gray-300 hover:text-red-600">
+          <button
+            onClick={() => onDelete(cat.id, cat.name)}
+            className="rounded p-1 text-gray-300 hover:text-red-600"
+          >
             <Trash2 className="h-4 w-4" />
           </button>
         </Tooltip>
@@ -133,35 +170,41 @@ export function CategoryListPage() {
   const loadCategories = async () => {
     setLoading(true);
     try {
-      const cats = await fetchAPI<Category[]>('/categories?all=true');
+      const cats = await fetchAPI<Category[]>("/categories?all=true");
       cats.sort((a, b) => a.sortOrder - b.sortOrder);
       setRawCategories(cats);
     } catch {
-      toast.error('加载失败');
+      toast.error("加载失败");
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => { loadCategories(); }, []);
+  useEffect(() => {
+    loadCategories();
+  }, []);
 
   // 构建树并扁平化
   const tree = useMemo(() => buildTree(rawCategories), [rawCategories]);
-  const flatList = useMemo(() => flattenTree(tree, 0, ''), [tree]);
+  const flatList = useMemo(() => flattenTree(tree, 0, ""), [tree]);
 
   // 用 ref 保持最新 flatList，避免 handleDragEnd 闭包过期
   const flatListRef = useRef(flatList);
   flatListRef.current = flatList;
 
   const handleDelete = async (id: number, name: string) => {
-    const ok = await confirm({ title: '删除目录', message: `确定删除目录「${name}」？该目录下的文章也会被删除。`, danger: true });
+    const ok = await confirm({
+      title: "删除目录",
+      message: `确定删除目录「${name}」？该目录下的文章也会被删除。`,
+      danger: true,
+    });
     if (!ok) return;
     try {
-      await fetchAPI(`/categories/${id}`, { method: 'DELETE' });
-      toast.success('已删除');
+      await fetchAPI(`/categories/${id}`, { method: "DELETE" });
+      toast.success("已删除");
       loadCategories();
     } catch {
-      toast.error('删除失败');
+      toast.error("删除失败");
     }
   };
 
@@ -180,19 +223,22 @@ export function CategoryListPage() {
 
     const items = reordered.map((f, idx) => ({ id: f.id, sortOrder: idx }));
     try {
-      await fetchAPI('/categories/reorder', {
-        method: 'POST',
+      await fetchAPI("/categories/reorder", {
+        method: "POST",
         body: JSON.stringify({ items }),
       });
     } catch (err) {
-      toast.error(err instanceof Error ? `排序失败: ${err.message}` : '排序保存失败');
+      toast.error(
+        err instanceof Error ? `排序失败: ${err.message}` : "排序保存失败",
+      );
       return;
     }
 
     loadCategories();
   }, []);
 
-  if (loading) return <div className="py-12 text-center text-gray-400">加载中...</div>;
+  if (loading)
+    return <div className="py-12 text-center text-gray-400">加载中...</div>;
 
   return (
     <div>
@@ -202,10 +248,11 @@ export function CategoryListPage() {
           <p className="mt-1 text-sm text-gray-400">拖拽左侧手柄调整排序</p>
         </div>
         <button
-          onClick={() => navigate('/categories/new')}
+          onClick={() => navigate("/categories/new")}
           className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
         >
-          <Plus className="h-4 w-4" />新建目录
+          <Plus className="h-4 w-4" />
+          新建目录
         </button>
       </div>
 
@@ -213,10 +260,21 @@ export function CategoryListPage() {
         <div className="py-12 text-center text-gray-400">暂无目录</div>
       ) : (
         <div className="rounded-xl border bg-white shadow-sm py-2">
-          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-            <SortableContext items={flatList.map((f) => f.id)} strategy={verticalListSortingStrategy}>
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext
+              items={flatList.map((f) => f.id)}
+              strategy={verticalListSortingStrategy}
+            >
               {flatList.map((item) => (
-                <SortableRow key={item.id} item={item} onDelete={handleDelete} />
+                <SortableRow
+                  key={item.id}
+                  item={item}
+                  onDelete={handleDelete}
+                />
               ))}
             </SortableContext>
           </DndContext>

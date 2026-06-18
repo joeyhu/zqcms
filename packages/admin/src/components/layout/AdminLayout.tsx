@@ -15,6 +15,8 @@ import {
   Tags,
   Bot,
   Send,
+  MessageSquare,
+  CheckCircle2,
 } from "lucide-react";
 import { logout } from "@/lib/auth";
 import { fetchAPI, setCurrentSiteId, getCurrentSiteId } from "@/lib/api-client";
@@ -30,6 +32,7 @@ const navItems = [
   { to: "/settings", icon: Settings, label: "站点配置" },
   { to: "/settings/llm", icon: Bot, label: "LLM 设置" },
   { to: "/publish", icon: Send, label: "内容平台" },
+  { to: "/feedback", icon: MessageSquare, label: "用户反馈" },
   { to: "/sites", icon: Globe, label: "站点管理" },
 ];
 
@@ -159,29 +162,48 @@ export function AdminLayout() {
             </button>
 
             {menuOpen && (
-              <div className="absolute right-0 top-full z-50 mt-1 w-64 rounded-xl border bg-white shadow-lg">
-                <div className="max-h-60 overflow-y-auto py-2">
-                  {sites.map((site) => (
-                    <button
-                      key={site.id}
-                      onClick={() => switchSite(site)}
-                      className={`flex w-full items-center gap-3 px-4 py-2 text-sm transition-colors hover:bg-gray-50 ${
-                        currentSite?.id === site.id
-                          ? "bg-blue-50 font-medium text-blue-700"
-                          : "text-gray-700"
-                      }`}
-                    >
-                      <span
-                        className={`h-2 w-2 rounded-full ${currentSite?.id === site.id ? "bg-blue-600" : "bg-gray-300"}`}
-                      />
-                      <div className="text-left">
-                        <div>{site.name}</div>
-                        <div className="text-xs text-gray-400">
-                          {site.domain}
+              <div className="absolute right-0 top-full z-50 mt-1 w-72 rounded-xl border bg-white shadow-xl">
+                <div className="border-b px-4 py-2.5">
+                  <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">切换站点</span>
+                </div>
+                <div className="max-h-60 overflow-y-auto py-1">
+                  {sites.map((site) => {
+                    const isActive = currentSite?.id === site.id;
+                    return (
+                      <button
+                        key={site.id}
+                        onClick={() => switchSite(site)}
+                        className={`flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors ${
+                          isActive
+                            ? 'bg-blue-50 text-blue-700'
+                            : 'text-gray-700 hover:bg-gray-50'
+                        }`}
+                      >
+                        {/* Active indicator dot */}
+                        <span
+                          className={`h-2.5 w-2.5 rounded-full shrink-0 transition-colors ${
+                            isActive
+                              ? 'bg-blue-500 ring-2 ring-blue-200'
+                              : 'bg-gray-300'
+                          }`}
+                        />
+
+                        <div className="text-left flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className={`truncate ${isActive ? 'font-semibold' : ''}`}>
+                              {site.name}
+                            </span>
+                            {isActive && (
+                              <CheckCircle2 className="h-4 w-4 text-blue-500 shrink-0" />
+                            )}
+                          </div>
+                          <div className="text-xs text-gray-400 truncate">
+                            {site.domain}
+                          </div>
                         </div>
-                      </div>
-                    </button>
-                  ))}
+                      </button>
+                    );
+                  })}
                 </div>
                 <div className="border-t px-4 py-2">
                   <button

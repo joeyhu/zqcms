@@ -12,6 +12,7 @@ import { sitemapRoutes } from './routes/sitemap';
 import { siteManageRoutes } from './routes/sites-manage';
 import { llmRoutes } from './routes/llm';
 import { publishRoutes } from './routes/publish';
+import { feedbackRoutes } from './routes/feedback';
 import type { SiteContext } from './middleware/site';
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
@@ -125,6 +126,7 @@ const app = new Elysia()
   .use(publishRoutes)
   .use(tagRoutes)
   .use(sitemapRoutes)
+  .use(feedbackRoutes)
 
   // ---- 全局错误处理 ----
   .onError(({ code, error }) => {
