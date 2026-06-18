@@ -35,8 +35,8 @@ const navItems = [
   { to: "/settings/llm", icon: Bot, label: "LLM 设置" },
   { to: "/publish", icon: Send, label: "内容平台" },
   { to: "/feedback", icon: MessageSquare, label: "用户反馈" },
-  { to: "/sites", icon: Globe, label: "站点管理" },
   ...(isAdmin() ? [{ to: "/users", icon: Users, label: "用户管理" }] : []),
+  { to: "/sites", icon: Globe, label: "站点管理" },
 ];
 
 interface SiteItem {
@@ -167,7 +167,9 @@ export function AdminLayout() {
             {menuOpen && (
               <div className="absolute right-0 top-full z-50 mt-1 w-72 rounded-xl border bg-white shadow-xl">
                 <div className="border-b px-4 py-2.5">
-                  <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">切换站点</span>
+                  <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">
+                    切换站点
+                  </span>
                 </div>
                 <div className="max-h-60 overflow-y-auto py-1">
                   {sites.map((site) => {
@@ -178,22 +180,24 @@ export function AdminLayout() {
                         onClick={() => switchSite(site)}
                         className={`flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors ${
                           isActive
-                            ? 'bg-blue-50 text-blue-700'
-                            : 'text-gray-700 hover:bg-gray-50'
+                            ? "bg-blue-50 text-blue-700"
+                            : "text-gray-700 hover:bg-gray-50"
                         }`}
                       >
                         {/* Active indicator dot */}
                         <span
                           className={`h-2.5 w-2.5 rounded-full shrink-0 transition-colors ${
                             isActive
-                              ? 'bg-blue-500 ring-2 ring-blue-200'
-                              : 'bg-gray-300'
+                              ? "bg-blue-500 ring-2 ring-blue-200"
+                              : "bg-gray-300"
                           }`}
                         />
 
                         <div className="text-left flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            <span className={`truncate ${isActive ? 'font-semibold' : ''}`}>
+                            <span
+                              className={`truncate ${isActive ? "font-semibold" : ""}`}
+                            >
                               {site.name}
                             </span>
                             {isActive && (
