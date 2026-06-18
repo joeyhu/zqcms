@@ -271,6 +271,16 @@ export function Footer({ settings }: FooterProps) {
                 站点地图
               </a>
             </div>
+
+            {/* Powered by */}
+            <a
+              href="https://github.com/joeyhu/zqcms"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-gray-300 hover:text-gray-500 transition-colors mt-2"
+            >
+              由 ZQCMS 志前内容管理系统构建
+            </a>
           </div>
         </div>
       </div>
