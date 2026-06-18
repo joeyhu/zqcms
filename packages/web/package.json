@@ -9,15 +9,16 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@next/third-parties": "^16.2.9",
     "@zqcms/shared": "workspace:*",
+    "lucide-react": "^0.475.0",
     "next": "^15.2.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "lucide-react": "^0.475.0",
     "react-markdown": "^9.0.3",
-    "remark-gfm": "^4.0.0",
     "rehype-highlight": "^7.0.2",
-    "rehype-slug": "^6.0.0"
+    "rehype-slug": "^6.0.0",
+    "remark-gfm": "^4.0.0"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

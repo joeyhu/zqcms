@@ -45,23 +45,24 @@ export function Pagination({ currentPage, totalPages }: PaginationProps) {
   }
 
   return (
-    <nav className="flex items-center justify-center gap-1 mt-10">
+    <nav className="flex items-center justify-center gap-1 mt-10" aria-label="分页导航">
       {/* Previous */}
       {currentPage > 1 ? (
         <a
           href={createPageUrl(currentPage - 1)}
+          rel="prev"
           onClick={(e) => {
             e.preventDefault();
             router.push(createPageUrl(currentPage - 1));
           }}
           className="inline-flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors"
         >
-          <ChevronLeft className="h-4 w-4" />
+          <ChevronLeft className="h-4 w-4" aria-hidden="true" />
           上一页
         </a>
       ) : (
         <span className="inline-flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium text-gray-300 cursor-not-allowed">
-          <ChevronLeft className="h-4 w-4" />
+          <ChevronLeft className="h-4 w-4" aria-hidden="true" />
           上一页
         </span>
       )}
@@ -77,6 +78,7 @@ export function Pagination({ currentPage, totalPages }: PaginationProps) {
             <a
               key={page}
               href={createPageUrl(page)}
+              rel={page === currentPage ? undefined : undefined}
               onClick={(e) => {
                 e.preventDefault();
                 router.push(createPageUrl(page));
@@ -88,6 +90,7 @@ export function Pagination({ currentPage, totalPages }: PaginationProps) {
                   : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                 }
               `}
+              aria-current={page === currentPage ? 'page' : undefined}
             >
               {page}
             </a>
@@ -99,6 +102,7 @@ export function Pagination({ currentPage, totalPages }: PaginationProps) {
       {currentPage < totalPages ? (
         <a
           href={createPageUrl(currentPage + 1)}
+          rel="next"
           onClick={(e) => {
             e.preventDefault();
             router.push(createPageUrl(currentPage + 1));
@@ -106,12 +110,12 @@ export function Pagination({ currentPage, totalPages }: PaginationProps) {
           className="inline-flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors"
         >
           下一页
-          <ChevronRight className="h-4 w-4" />
+          <ChevronRight className="h-4 w-4" aria-hidden="true" />
         </a>
       ) : (
         <span className="inline-flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium text-gray-300 cursor-not-allowed">
           下一页
-          <ChevronRight className="h-4 w-4" />
+          <ChevronRight className="h-4 w-4" aria-hidden="true" />
         </span>
       )}
     </nav>

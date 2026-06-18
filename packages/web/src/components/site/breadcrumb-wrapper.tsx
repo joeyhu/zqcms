@@ -1,7 +1,10 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import { useState, useEffect } from "react";
 import { Breadcrumb } from "./breadcrumb";
+
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:11001';
 
 interface CategoryInfo {
   id: number;
@@ -16,6 +19,36 @@ interface BreadcrumbWrapperProps {
 
 export function BreadcrumbWrapper({ categories }: BreadcrumbWrapperProps) {
   const pathname = usePathname();
+  const [articleTitle, setArticleTitle] = useState<string | null>(null);
+
+  // ── Fetch article title when on an article page ──
+  useEffect(() => {
+    const segments = pathname.split("/").filter(Boolean);
+    const lastSeg = segments[segments.length - 1];
+    const isArticle = /^\d+$/.test(lastSeg);
+    if (!isArticle) {
+      setArticleTitle(null);
+      return;
+    }
+
+    let cancelled = false;
+    const apiBase =
+      process.env.NEXT_PUBLIC_API_URL || 'http://localhost:11003/api';
+
+    fetch(`${apiBase}/posts/by-id/${lastSeg}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((post) => {
+        if (!cancelled && post?.title) {
+          setArticleTitle(post.title);
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      cancelled = true;
+    };
+  }, [pathname]);
+
   if (pathname === "/") return null;
 
   const segments = pathname.split("/").filter(Boolean);
@@ -32,32 +65,34 @@ export function BreadcrumbWrapper({ categories }: BreadcrumbWrapperProps) {
 
     // ── Tag pages ──
     if (seg === "tag") {
-      items.push({ label: "标签", href: isLast ? undefined : "/tag" });
+      items.push({
+        label: "标签",
+        href: isLast ? undefined : "/tag",
+      });
       continue;
     }
 
-    // ── Numeric = article ID → "文章内容" ──
+    // ── Numeric = article ID ──
     if (/^\d+$/.test(seg)) {
-      items.push({ label: "文章内容" });
+      items.push({
+        label: articleTitle || "文章内容",
+      });
       continue;
     }
 
     // ── Match category by building the full slug from accumulated segments ──
-    // For URL /docs/guide, the fullSlug at i=0 is "docs", at i=1 is "docs/guide"
     const fullSlug = segments.slice(0, i + 1).join("/");
     const cat = categories.find((c) => c.slug === fullSlug);
 
     if (cat) {
       items.push({
         label: cat.name,
-        // Last category segment: still link it (useful for subcategory pages)
         href: accumulatedPath,
       });
       continue;
     }
 
     // ── Unknown segment ──
-    // Try to make it human-readable
     const displayName = seg
       .replace(/-/g, " ")
       .replace(/\b\w/g, (c) => c.toUpperCase());

@@ -13,52 +13,217 @@ import { TableOfContents } from "@/components/site/table-of-contents";
 import { parseTocFromMarkdown } from "@/lib/toc";
 import { Pagination } from "@/components/site/pagination";
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:11001';
+
 interface PageProps {
   params: Promise<{ slug: string[] }>;
   searchParams: Promise<{ page?: string }>;
 }
 
+// ── Helpers ──
+
+function stripMarkdown(md: string): string {
+  return md
+    .replace(/^#{1,6}\s+/gm, '')
+    .replace(/\*\*(.+?)\*\*/g, '$1')
+    .replace(/\*(.+?)\*/g, '$1')
+    .replace(/`{1,3}[^`]*`{1,3}/g, '')
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+    .replace(/!\[[^\]]*\]\([^)]+\)/g, '')
+    .replace(/>\s/g, '')
+    .replace(/[-*+]\s/g, '')
+    .replace(/\n{2,}/g, '\n')
+    .trim();
+}
+
+function buildArticleUrl(post: Post): string {
+  const seg = post.category?.slug
+    ? `/${post.category.slug}/${post.id}`
+    : `/${post.id}`;
+  return `${siteUrl}${seg}`;
+}
+
+function buildCategoryUrl(category: Category): string {
+  return `${siteUrl}/${category.slug}`;
+}
+
+// ── Article JSON-LD ──
+
+function ArticleJsonLd({ post, url }: { post: Post; url: string }) {
+  const authorName = post.author?.name || post.author?.email || 'ZQCMS';
+  const image = post.coverImage
+    ? [post.coverImage]
+    : undefined;
+
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: post.seoTitle || post.title,
+    description: post.seoDesc || post.excerpt || '',
+    image,
+    datePublished: post.publishedAt || undefined,
+    dateModified: post.updatedAt || undefined,
+    author: {
+      '@type': 'Person',
+      name: authorName,
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: 'ZQCMS',
+    },
+    ...(post.tags && post.tags.length > 0
+      ? {
+          keywords: (post.tags as unknown as Array<{ tag?: { name?: string } }>)
+            .map((t) => t.tag?.name)
+            .filter(Boolean)
+            .join(', '),
+        }
+      : {}),
+    mainEntityOfPage: {
+      '@type': 'WebPage',
+      '@id': url,
+    },
+  };
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+    />
+  );
+}
+
+// ── Breadcrumb JSON-LD ──
+
+function BreadcrumbJsonLd({
+  items,
+}: {
+  items: { name: string; url?: string }[];
+}) {
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: items.map((item, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: item.name,
+      item: item.url,
+    })),
+  };
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+    />
+  );
+}
+
+// ── generateMetadata ──
+
 export async function generateMetadata({
   params,
+  searchParams,
 }: PageProps): Promise<Metadata> {
   const { slug } = await params;
+  const { page: pageStr } = await searchParams;
   const lastSegment = slug[slug.length - 1];
   const isNumericId = /^\d+$/.test(lastSegment);
 
-  // Article page (URL ends with numeric ID)
+  // ── Article page ──
   if (isNumericId) {
     const post = await fetchAPI<Post | null>(
       `/posts/by-id/${lastSegment}`,
     ).catch(() => null);
+
     if (post) {
+      const url = buildArticleUrl(post);
+      const title = post.seoTitle || post.title;
+      const description = post.seoDesc || post.excerpt || '';
+      const authorName = post.author?.name || post.author?.email || undefined;
+      const tags = post.tags
+        ? (post.tags as unknown as Array<{ tag?: { name?: string } }>)
+            .map((t) => t.tag?.name)
+            .filter((n): n is string => typeof n === 'string')
+        : undefined;
+      const section = post.category?.name || undefined;
+
       return {
-        title: post.seoTitle || post.title,
-        description: post.seoDesc || post.excerpt || "",
+        title,
+        description,
+        alternates: { canonical: url },
         openGraph: {
-          title: post.seoTitle || post.title,
-          description: post.seoDesc || post.excerpt || "",
-          type: "article",
+          title,
+          description,
+          type: 'article',
           publishedTime: post.publishedAt || undefined,
+          modifiedTime: post.updatedAt || undefined,
+          images: post.coverImage ? [{ url: post.coverImage }] : undefined,
+          authors: authorName ? [authorName] : undefined,
+          tags,
+          section,
+          url,
+        },
+        twitter: {
+          card: post.coverImage ? 'summary_large_image' : 'summary',
+          title,
+          description,
           images: post.coverImage ? [post.coverImage] : undefined,
+        },
+        robots: {
+          index: true,
+          follow: true,
+          'max-snippet': -1,
+          'max-image-preview': 'large',
         },
       };
     }
-    return { title: "文章未找到" };
-  }
-
-  // Category page (all segments form the category slug path)
-  const fullSlug = slug.join("/");
-  const category = await fetchAPI<Category | null>(
-    `/categories/${fullSlug}`,
-  ).catch(() => null);
-  if (category) {
     return {
-      title: category.name,
-      description: category.description || `${category.name} 相关文章`,
+      title: '文章未找到',
+      robots: { index: false },
     };
   }
 
-  return { title: "页面未找到" };
+  // ── Category page ──
+  const fullSlug = slug.join('/');
+  const category = await fetchAPI<Category | null>(
+    `/categories/${fullSlug}`,
+  ).catch(() => null);
+
+  if (category) {
+    const url = buildCategoryUrl(category);
+    const page = parseInt(pageStr || '1') || 1;
+    const description = category.description || `${category.name} 相关文章`;
+
+    return {
+      title: category.name,
+      description,
+      alternates: {
+        canonical: page > 1 ? `${url}?page=${page}` : url,
+      },
+      openGraph: {
+        title: category.name,
+        description,
+        type: 'website',
+        url,
+      },
+      twitter: {
+        card: 'summary',
+        title: category.name,
+        description,
+      },
+      robots: {
+        index: true,
+        follow: true,
+        ...(page > 1 ? { index: false } : {}),
+      },
+    };
+  }
+
+  return {
+    title: '页面未找到',
+    robots: { index: false },
+  };
 }
 
 // ============================================================
@@ -67,7 +232,6 @@ export async function generateMetadata({
 function CategoryFallbackLayout({
   category,
   page,
-  pageSize,
   totalPosts,
 }: {
   category: Category & { posts?: Post[] };
@@ -77,10 +241,18 @@ function CategoryFallbackLayout({
 }) {
   const posts = category.posts || [];
   const children = category.children || [];
-  const totalPages = Math.max(1, Math.ceil(totalPosts / pageSize));
+  const totalPages = Math.max(1, Math.ceil(totalPosts / 20));
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
+      {/* Breadcrumb structured data */}
+      <BreadcrumbJsonLd
+        items={[
+          { name: '首页', url: siteUrl },
+          { name: category.name, url: buildCategoryUrl(category) },
+        ]}
+      />
+
       <div className="animate-fade-in-up">
         <CategoryHeader category={category} />
       </div>
@@ -133,6 +305,8 @@ function CategoryFallbackLayout({
 // Article Detail Page
 // ============================================================
 async function ArticleDetailPage({ post }: { post: Post }) {
+  const articleUrl = buildArticleUrl(post);
+
   // Fetch related posts from the same category
   let relatedPosts: Post[] = [];
   if (post.categoryId) {
@@ -145,13 +319,28 @@ async function ArticleDetailPage({ post }: { post: Post }) {
   // Parse TOC from markdown headings
   const tocItems = parseTocFromMarkdown(post.content);
 
+  // Build breadcrumb items for JSON-LD
+  const breadcrumbItems: { name: string; url?: string }[] = [
+    { name: '首页', url: siteUrl },
+  ];
+
+  if (post.category) {
+    const cat = post.category as Category;
+    breadcrumbItems.push({ name: cat.name, url: buildCategoryUrl(cat) });
+  }
+  breadcrumbItems.push({ name: post.title });
+
   return (
     <article className="mx-auto px-4 py-8">
+      {/* JSON-LD structured data */}
+      <ArticleJsonLd post={post} url={articleUrl} />
+      <BreadcrumbJsonLd items={breadcrumbItems} />
+
       {/* Content body + TOC sidebar */}
       <div className="flex justify-center">
         {/* Left: main content column */}
         <div className="flex-1 max-w-5xl min-w-0">
-           {/* Article Header with cover image, meta, author */}
+          {/* Article Header with cover image, meta, author */}
           <div className="animate-fade-in-up">
             <ArticleHeader post={post} />
           </div>
@@ -160,7 +349,7 @@ async function ArticleDetailPage({ post }: { post: Post }) {
           {tocItems.length > 0 && <TableOfContents items={tocItems} />}
 
           {/* Post Content */}
-           <div className="animate-fade-in-up stagger-1 bg-white rounded-lg border border-gray-100 px-6 py-8 sm:px-10 sm:py-10 shadow-sm">
+          <div className="animate-fade-in-up stagger-1 bg-white rounded-lg border border-gray-100 px-6 py-8 sm:px-10 sm:py-10 shadow-sm">
             <MarkdownRenderer content={post.content} />
           </div>
 
@@ -178,10 +367,10 @@ async function ArticleDetailPage({ post }: { post: Post }) {
               ).map((pt) => (
                 <a
                   key={pt.tagId || pt.tag?.id}
-                  href={pt.tag?.slug ? `/tag/${pt.tag.slug}` : "#"}
+                  href={pt.tag?.slug ? `/tag/${pt.tag.slug}` : '#'}
                   className="inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-200 hover:text-gray-900"
                 >
-                  #{pt.tag?.name || ""}
+                  #{pt.tag?.name || ''}
                 </a>
               ))}
             </div>
@@ -232,8 +421,8 @@ export default async function CatchAllPage({
   }
 
   // ── Category page ──
-  const fullSlug = slug.join("/");
-  const page = Math.max(1, parseInt(pageStr || "1") || 1);
+  const fullSlug = slug.join('/');
+  const page = Math.max(1, parseInt(pageStr || '1') || 1);
   const pageSize = 20;
 
   const category = await fetchAPI<

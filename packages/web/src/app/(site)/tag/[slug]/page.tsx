@@ -5,6 +5,8 @@ import type { Post, Tag } from "@zqcms/shared/types";
 import { PostList } from "@/components/site/post-list";
 import { TagHeader } from "@/components/site/tag-header";
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:11001';
+
 interface PageProps {
   params: Promise<{ slug: string }>;
 }
@@ -17,12 +19,33 @@ export async function generateMetadata({
     () => null,
   );
   if (tag) {
+    const description = `浏览与 ${tag.name} 相关的所有文章`;
+    const url = `${siteUrl}/tag/${tag.slug}`;
     return {
       title: `标签：${tag.name}`,
-      description: `浏览与 ${tag.name} 相关的所有文章`,
+      description,
+      alternates: { canonical: url },
+      openGraph: {
+        title: `标签：${tag.name}`,
+        description,
+        type: 'website',
+        url,
+      },
+      twitter: {
+        card: 'summary',
+        title: `标签：${tag.name}`,
+        description,
+      },
+      robots: {
+        index: true,
+        follow: true,
+      },
     };
   }
-  return { title: "标签未找到" };
+  return {
+    title: "标签未找到",
+    robots: { index: false },
+  };
 }
 
 export default async function TagPage({ params }: PageProps) {

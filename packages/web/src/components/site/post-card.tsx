@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { Post } from "@zqcms/shared/types";
 import { Calendar, FolderOpen, ArrowRight, Flame, Hash } from "lucide-react";
 
@@ -45,10 +46,12 @@ export function PostCard({ post, cardClass, isLightText }: PostCardProps) {
           className="relative overflow-hidden bg-gray-50 block"
           style={{ aspectRatio: "16/9" }}
         >
-          <img
+          <Image
             src={post.coverImage}
             alt={post.title}
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            className="object-cover transition-transform duration-500 group-hover:scale-105"
             loading="lazy"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
@@ -65,12 +68,12 @@ export function PostCard({ post, cardClass, isLightText }: PostCardProps) {
                 href={categoryUrl}
                 className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-600 hover:bg-blue-100 transition-colors"
               >
-                <FolderOpen className="h-3 w-3" />
+                <FolderOpen className="h-3 w-3" aria-hidden="true" />
                 {post.category.name}
               </Link>
             ) : (
               <span className="inline-flex items-center gap-1 rounded-full bg-gray-50 px-2.5 py-0.5 text-xs font-medium text-gray-400">
-                <FolderOpen className="h-3 w-3" />
+                <FolderOpen className="h-3 w-3" aria-hidden="true" />
                 未分类
               </span>
             )}
@@ -107,7 +110,7 @@ export function PostCard({ post, cardClass, isLightText }: PostCardProps) {
             {/* Tags — each links to tag page */}
             {tagItems.length > 0 && !isLightText && (
               <span className="inline-flex items-center gap-1 shrink-0">
-                <Hash className="h-3 w-3 text-gray-400" />
+                <Hash className="h-3 w-3 text-gray-400" aria-hidden="true" />
                 <span className="text-gray-500 truncate">
                   {tagItems.slice(0, 3).map((t, i) => (
                     <span key={t?.id}>
@@ -133,19 +136,19 @@ export function PostCard({ post, cardClass, isLightText }: PostCardProps) {
             {/* Hot badge (non-clickable indicator) */}
             {post.isFeatured && (
               <span className="inline-flex items-center gap-0.5 rounded-full bg-orange-50 px-1.5 py-0.5 text-xs font-medium text-orange-600 border border-orange-200 shrink-0">
-                <Flame className="h-3 w-3" />
+                <Flame className="h-3 w-3" aria-hidden="true" />
                 热门
               </span>
             )}
 
             {/* Separator */}
             {(tagItems.length > 0 || post.isFeatured) && (
-              <span className="text-gray-300 shrink-0">|</span>
+              <span className="text-gray-300 shrink-0" aria-hidden="true">|</span>
             )}
 
             {/* Date + views (non-clickable) */}
             <span className="inline-flex items-center gap-1.5 shrink-0">
-              <Calendar className="h-3 w-3" />
+              <Calendar className="h-3 w-3" aria-hidden="true" />
               <time dateTime={post.updatedAt || post.publishedAt || ""}>
                 {new Date(
                   post.updatedAt || post.publishedAt || "",
@@ -161,9 +164,10 @@ export function PostCard({ post, cardClass, isLightText }: PostCardProps) {
           <Link
             href={articleUrl}
             className={`inline-flex items-center gap-1 text-xs font-medium transition-all duration-300 shrink-0 ${isLightText ? "text-current/70" : "text-blue-600"} opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0`}
+            aria-label={`阅读 ${post.title}`}
           >
             阅读
-            <ArrowRight className="h-3 w-3" />
+            <ArrowRight className="h-3 w-3" aria-hidden="true" />
           </Link>
         </div>
       </div>

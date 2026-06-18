@@ -5,6 +5,8 @@ import Link from "next/link";
 import { Search, FileText, FolderOpen, Calendar } from "lucide-react";
 import { Pagination } from "@/components/site/pagination";
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:11001';
+
 interface PageProps {
   searchParams: Promise<{ q?: string; page?: string }>;
 }
@@ -12,10 +14,26 @@ interface PageProps {
 export async function generateMetadata({
   searchParams,
 }: PageProps): Promise<Metadata> {
-  const { q } = await searchParams;
+  const { q, page: pageStr } = await searchParams;
+  const page = parseInt(pageStr || '1') || 1;
+
   return {
-    title: q ? `搜索: ${q}` : "搜索",
-    description: q ? `搜索 "${q}" 的结果` : "搜索文章",
+    title: q ? `搜索: ${q}` : '搜索',
+    description: q ? `搜索 "${q}" 的结果` : '搜索文章',
+    robots: {
+      index: false,
+      follow: false,
+    },
+    alternates: {
+      canonical: q
+        ? `${siteUrl}/search?q=${encodeURIComponent(q)}${page > 1 ? `&page=${page}` : ''}`
+        : `${siteUrl}/search`,
+    },
+    openGraph: {
+      title: q ? `搜索: ${q}` : '搜索',
+      description: q ? `搜索 "${q}" 的结果` : '搜索文章',
+      type: 'website',
+    },
   };
 }
 
@@ -72,7 +90,7 @@ export default async function SearchPage({ searchParams }: PageProps) {
         <p className="mt-1 text-sm text-gray-500">
           {total > 0 ? (
             <div className="flex items-center">
-              共找到 <div className="text-blue-600 p-1">{total}</div> 条结果
+              共找到 <span className="text-blue-600 px-1">{total}</span> 条结果
             </div>
           ) : (
             "未找到相关结果"
@@ -84,7 +102,7 @@ export default async function SearchPage({ searchParams }: PageProps) {
       {posts.length === 0 ? (
         <div className="py-16 text-center">
           <Search className="mx-auto h-12 w-12 text-gray-300 mb-4" />
-          <p className="text-lg text-gray-500">未找到与 "{query}" 相关的文章</p>
+          <p className="text-lg text-gray-500">未找到与 &quot;{query}&quot; 相关的文章</p>
           <p className="mt-2 text-sm text-gray-400">
             尝试使用不同的关键词，或减少关键词数量
           </p>

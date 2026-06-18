@@ -1,5 +1,6 @@
 import { Elysia } from 'elysia';
 import { cors } from '@elysiajs/cors';
+import prisma from './lib/prisma';
 import { verifyToken } from './lib/jwt';
 import { resolveSite, extractSiteParams } from './middleware/site';
 import { authRoutes } from './routes/auth';
@@ -41,8 +42,12 @@ process.on('unhandledRejection', (reason) => logError('unhandledRejection', reas
 
 const app = new Elysia()
   // ---- CORS ----
+  // 生产环境：接受所有来源（子域名由宿主机 nginx 管理）
+  // 开发环境：仅 localhost
   .use(cors({
-    origin: ['http://localhost:11001', 'http://localhost:11002'],
+    origin: process.env.CORS_ORIGIN
+      ? process.env.CORS_ORIGIN.split(',')
+      : ['http://localhost:11001', 'http://localhost:11002'],
     credentials: true,
   }))
 
@@ -87,6 +92,19 @@ const app = new Elysia()
       logError('siteMiddleware', err);
       return { site: null, siteId: 0 };
     }
+  })
+
+  // ---- 公开路由：域名 → 站点查询（middleware 用） ----
+  .get('/api/sites/lookup', async ({ query }) => {
+    const domain = (query as Record<string, string>).domain;
+    if (!domain) return new Response(JSON.stringify({ error: 'domain required' }), { status: 400 });
+    const cleanDomain = domain.split(':')[0];
+    const site = await prisma.site.findUnique({
+      where: { domain: cleanDomain },
+      select: { id: true, slug: true, domain: true },
+    });
+    if (!site) return new Response(JSON.stringify({ error: 'not found' }), { status: 404 });
+    return site;
   })
 
   // ---- 响应日志 ----
@@ -152,6 +170,6 @@ const app = new Elysia()
       { status, headers: { 'Content-Type': 'application/json' } });
   })
 
-  .listen(process.env.API_PORT || 11003);
+  .listen({ port: process.env.API_PORT || 11003, hostname: '0.0.0.0' });
 
 console.log(`\n🚀 ZQCMS API Server running at http://localhost:${app.server?.port}\n`);

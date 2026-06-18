@@ -22,7 +22,7 @@ function NavLink({ cat, className = "", isActive }: NavLinkProps) {
   const linkContent = (
     <>
       {cat.name}
-      {cat.url && <ExternalLink className="h-3 w-3 opacity-40" />}
+      {cat.url && <ExternalLink className="h-3 w-3 opacity-40" aria-hidden="true" />}
     </>
   );
 
@@ -35,6 +35,7 @@ function NavLink({ cat, className = "", isActive }: NavLinkProps) {
         target="_blank"
         rel="noopener noreferrer"
         className={linkClass}
+        aria-current={isActive ? "page" : undefined}
       >
         {linkContent}
       </a>
@@ -42,7 +43,11 @@ function NavLink({ cat, className = "", isActive }: NavLinkProps) {
   }
 
   return (
-    <Link href={`/${cat.slug}`} className={linkClass}>
+    <Link
+      href={`/${cat.slug}`}
+      className={linkClass}
+      aria-current={isActive ? "page" : undefined}
+    >
       {linkContent}
       <span
         className={`
@@ -102,11 +107,11 @@ export function Header({ settings, categories }: HeaderProps) {
     }`;
 
   return (
-    <header className="sticky top-0 z-50 border-b border-gray-800 bg-gray-900 ">
+    <header className="sticky top-0 z-50 border-b border-gray-800 bg-gray-900">
       <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500" />
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 font-bold text-xl">
+        <Link href="/" className="flex items-center gap-2 font-bold text-xl" aria-label={settings.siteName}>
           {settings.logo && (
             <img
               src={settings.logo}
@@ -120,7 +125,7 @@ export function Header({ settings, categories }: HeaderProps) {
         </Link>
 
         {/* Desktop Nav */}
-        <nav className="hidden items-center md:flex">
+        <nav className="hidden items-center md:flex" aria-label="主导航">
           {topCategories.map((cat) => {
             const children = childMap.get(cat.id) || [];
             const active = isCategoryActive(cat);
@@ -167,8 +172,9 @@ export function Header({ settings, categories }: HeaderProps) {
           <button
             onClick={() => setSearchOpen(true)}
             className="hidden sm:flex items-center gap-2 rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-1.5 text-sm text-gray-400 hover:text-gray-200 hover:border-gray-600 transition-colors"
+            aria-label="打开搜索 (⌘K)"
           >
-            <Search className="h-4 w-4" />
+            <Search className="h-4 w-4" aria-hidden="true" />
             <span className="hidden lg:inline">搜索...</span>
             <kbd className="hidden lg:inline-flex items-center rounded border border-gray-600 bg-gray-700 px-1.5 py-0.5 text-xs font-mono text-gray-400">
               ⌘K
@@ -179,19 +185,23 @@ export function Header({ settings, categories }: HeaderProps) {
           <button
             onClick={() => setSearchOpen(true)}
             className="sm:hidden rounded-lg p-2 text-gray-300 hover:bg-white/10"
+            aria-label="打开搜索"
           >
-            <Search className="h-5 w-5" />
+            <Search className="h-5 w-5" aria-hidden="true" />
           </button>
 
           {/* Mobile Toggle */}
           <button
             className="md:hidden rounded-lg p-2 text-gray-300 hover:bg-white/10"
             onClick={() => setMobileOpen(!mobileOpen)}
+            aria-expanded={mobileOpen}
+            aria-controls="mobile-menu"
+            aria-label={mobileOpen ? "关闭菜单" : "打开菜单"}
           >
             {mobileOpen ? (
-              <X className="h-5 w-5" />
+              <X className="h-5 w-5" aria-hidden="true" />
             ) : (
-              <Menu className="h-5 w-5" />
+              <Menu className="h-5 w-5" aria-hidden="true" />
             )}
           </button>
         </div>
@@ -199,7 +209,11 @@ export function Header({ settings, categories }: HeaderProps) {
 
       {/* Mobile Nav */}
       {mobileOpen && (
-        <nav className="border-t border-gray-800 bg-gray-900 px-4 py-3 md:hidden">
+        <nav
+          id="mobile-menu"
+          className="border-t border-gray-800 bg-gray-900 px-4 py-3 md:hidden"
+          aria-label="移动端导航"
+        >
           {topCategories.map((cat) => {
             const children = childMap.get(cat.id) || [];
             const active = isCategoryActive(cat);

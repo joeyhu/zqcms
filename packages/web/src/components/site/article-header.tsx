@@ -1,3 +1,4 @@
+import Image from "next/image";
 import type { Post, Category } from "@zqcms/shared/types";
 import {
   estimateReadingTime,
@@ -19,15 +20,15 @@ export function ArticleHeader({ post }: ArticleHeaderProps) {
     <header className="relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 mb-10">
       {/* Cover Image */}
       {post.coverImage && (
-        <div
-          className="relative w-full overflow-hidden rounded-t-xl"
-          style={{ maxHeight: "420px" }}
-        >
-          <img
+        <div className="relative w-full overflow-hidden rounded-t-xl" style={{ maxHeight: "420px" }}>
+          <Image
             src={post.coverImage}
             alt={post.title}
+            width={1200}
+            height={420}
             className="w-full object-cover"
             style={{ maxHeight: "420px" }}
+            priority
           />
           {/* Gradient overlay at bottom of image */}
           <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-slate-50/90 to-transparent" />
@@ -44,14 +45,14 @@ export function ArticleHeader({ post }: ArticleHeaderProps) {
               href={`/${category.slug}`}
               className="inline-flex items-center gap-1.5 rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-700 transition-colors hover:bg-blue-200"
             >
-              <FolderOpen className="h-3.5 w-3.5" />
+              <FolderOpen className="h-3.5 w-3.5" aria-hidden="true" />
               {category.name}
             </a>
           )}
 
           {post.publishedAt && (
             <span className="inline-flex items-center gap-1">
-              <Calendar className="h-3.5 w-3.5" />
+              <Calendar className="h-3.5 w-3.5" aria-hidden="true" />
               <time dateTime={post.publishedAt}>
                 {new Date(post.publishedAt).toLocaleDateString("zh-CN", {
                   year: "numeric",
@@ -65,7 +66,7 @@ export function ArticleHeader({ post }: ArticleHeaderProps) {
           )}
 
           <span className="inline-flex items-center gap-1">
-            <Clock className="h-3.5 w-3.5" />
+            <Clock className="h-3.5 w-3.5" aria-hidden="true" />
             阅读约 {readingTime} 分钟
           </span>
 
@@ -82,7 +83,7 @@ export function ArticleHeader({ post }: ArticleHeaderProps) {
               className="inline-flex items-center gap-1"
               title={`${post.viewCount} 次浏览`}
             >
-              <Eye className="h-3.5 w-3.5" />
+              <Eye className="h-3.5 w-3.5" aria-hidden="true" />
               {post.viewCount.toLocaleString()} 次浏览
             </span>
           )}

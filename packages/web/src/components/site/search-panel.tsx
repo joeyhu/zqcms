@@ -27,6 +27,7 @@ export function SearchPanel({ isOpen, onClose }: SearchPanelProps) {
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const inputRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const listRef = useRef<HTMLDivElement>(null);
 
   // Focus input on open
   useEffect(() => {
@@ -49,9 +50,14 @@ export function SearchPanel({ isOpen, onClose }: SearchPanelProps) {
     setLoading(true);
     try {
       const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:11003/api';
-      const res = await fetch(
-        `${apiBase}/posts?search=${encodeURIComponent(q.trim())}&status=PUBLISHED&pageSize=5&orderBy=publishedAt&orderDir=desc`,
-      );
+      const url = new URL(`${apiBase}/posts`);
+      url.searchParams.set('search', q.trim());
+      url.searchParams.set('status', 'PUBLISHED');
+      url.searchParams.set('pageSize', '5');
+      url.searchParams.set('orderBy', 'publishedAt');
+      url.searchParams.set('orderDir', 'desc');
+
+      const res = await fetch(url.toString());
       const data = await res.json();
       setResults(data.data || []);
       setTotal(data.total || 0);
@@ -65,7 +71,9 @@ export function SearchPanel({ isOpen, onClose }: SearchPanelProps) {
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => doSearch(query), 300);
-    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
   }, [query, doSearch]);
 
   // Keyboard navigation
@@ -108,27 +116,53 @@ export function SearchPanel({ isOpen, onClose }: SearchPanelProps) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh]">
+    <div
+      className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh]"
+      role="dialog"
+      aria-modal="true"
+      aria-label="搜索文章"
+    >
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+      <div
+        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+        onClick={onClose}
+        aria-hidden="true"
+      />
 
       {/* Panel */}
-      <div className="relative w-full max-w-xl rounded-xl bg-white shadow-2xl border border-gray-200 overflow-hidden">
+      <div
+        className="relative w-full max-w-xl rounded-xl bg-white shadow-2xl border border-gray-200 overflow-hidden"
+        role="search"
+      >
         {/* Input */}
         <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-100">
-          <Search className="h-5 w-5 text-gray-400 shrink-0" />
+          <Search className="h-5 w-5 text-gray-400 shrink-0" aria-hidden="true" />
           <input
             ref={inputRef}
             type="text"
             value={query}
-            onChange={(e) => { setQuery(e.target.value); setSelectedIndex(-1); }}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              setSelectedIndex(-1);
+            }}
             onKeyDown={handleKeyDown}
             placeholder="搜索文章..."
             className="flex-1 text-base text-gray-900 placeholder-gray-400 outline-none bg-transparent"
+            aria-label="搜索关键词"
+            autoComplete="off"
+            aria-autocomplete="list"
+            aria-controls="search-results-list"
+            aria-activedescendant={
+              selectedIndex >= 0 ? `search-result-${selectedIndex}` : undefined
+            }
           />
           {query && (
-            <button onClick={() => setQuery('')} className="p-1 text-gray-400 hover:text-gray-600">
-              <X className="h-4 w-4" />
+            <button
+              onClick={() => setQuery('')}
+              className="p-1 text-gray-400 hover:text-gray-600"
+              aria-label="清除搜索"
+            >
+              <X className="h-4 w-4" aria-hidden="true" />
             </button>
           )}
           <kbd className="hidden sm:inline-flex items-center rounded border border-gray-200 bg-gray-50 px-1.5 py-0.5 text-xs text-gray-400 font-mono">
@@ -137,57 +171,71 @@ export function SearchPanel({ isOpen, onClose }: SearchPanelProps) {
         </div>
 
         {/* Results */}
-        <div className="max-h-[60vh] overflow-y-auto">
+        <div
+          id="search-results-list"
+          className="max-h-[60vh] overflow-y-auto"
+          role="listbox"
+          aria-label="搜索结果"
+        >
           {loading && (
-            <div className="py-8 text-center text-sm text-gray-400">搜索中...</div>
+            <div className="py-8 text-center text-sm text-gray-400" role="status">
+              搜索中...
+            </div>
           )}
 
           {!loading && query && results.length === 0 && (
             <div className="py-12 text-center">
-              <Search className="mx-auto h-8 w-8 text-gray-300 mb-3" />
+              <Search className="mx-auto h-8 w-8 text-gray-300 mb-3" aria-hidden="true" />
               <p className="text-sm text-gray-500">未找到相关文章</p>
               <p className="text-xs text-gray-400 mt-1">尝试使用不同关键词</p>
             </div>
           )}
 
-          {!loading && results.map((item, i) => {
-            const url = item.category?.slug
-              ? `/${item.category.slug}/${item.id}`
-              : `/${item.id}`;
-            return (
-              <Link
-                key={item.id}
-                href={url}
-                onClick={onClose}
-                className={`flex items-start gap-3 px-4 py-3 border-b border-gray-50 hover:bg-gray-50 transition-colors ${
-                  i === selectedIndex ? 'bg-blue-50' : ''
-                }`}
-              >
-                <FileText className="h-4 w-4 text-gray-400 mt-0.5 shrink-0" />
-                <div className="min-w-0 flex-1">
-                  <div className="text-sm font-medium text-gray-900 truncate">
-                    {query ? highlightText(item.title, query) : item.title}
-                  </div>
-                  {item.excerpt && (
-                    <div className="text-xs text-gray-500 mt-0.5 line-clamp-1">
-                      {item.excerpt}
+          {!loading &&
+            results.map((item, i) => {
+              const url = item.category?.slug
+                ? `/${item.category.slug}/${item.id}`
+                : `/${item.id}`;
+              return (
+                <Link
+                  key={item.id}
+                  href={url}
+                  onClick={onClose}
+                  id={`search-result-${i}`}
+                  role="option"
+                  aria-selected={i === selectedIndex}
+                  className={`flex items-start gap-3 px-4 py-3 border-b border-gray-50 hover:bg-gray-50 transition-colors ${
+                    i === selectedIndex ? 'bg-blue-50' : ''
+                  }`}
+                >
+                  <FileText
+                    className="h-4 w-4 text-gray-400 mt-0.5 shrink-0"
+                    aria-hidden="true"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <div className="text-sm font-medium text-gray-900 truncate">
+                      {query ? highlightText(item.title, query) : item.title}
                     </div>
-                  )}
-                  <div className="flex items-center gap-2 mt-1 text-xs text-gray-400">
-                    {item.category && (
-                      <span className="inline-flex items-center gap-0.5">
-                        <FolderOpen className="h-3 w-3" />
-                        {item.category.name}
-                      </span>
+                    {item.excerpt && (
+                      <div className="text-xs text-gray-500 mt-0.5 line-clamp-1">
+                        {item.excerpt}
+                      </div>
                     )}
-                    <span>
-                      {new Date(item.updatedAt).toLocaleDateString('zh-CN')}
-                    </span>
+                    <div className="flex items-center gap-2 mt-1 text-xs text-gray-400">
+                      {item.category && (
+                        <span className="inline-flex items-center gap-0.5">
+                          <FolderOpen className="h-3 w-3" aria-hidden="true" />
+                          {item.category.name}
+                        </span>
+                      )}
+                      <span>
+                        {new Date(item.updatedAt).toLocaleDateString('zh-CN')}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              </Link>
-            );
-          })}
+                </Link>
+              );
+            })}
 
           {/* View all */}
           {total > 5 && query && (
@@ -197,7 +245,7 @@ export function SearchPanel({ isOpen, onClose }: SearchPanelProps) {
               className="flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium text-blue-600 hover:bg-blue-50 transition-colors"
             >
               查看全部 {total} 条结果
-              <Search className="h-3.5 w-3.5" />
+              <Search className="h-3.5 w-3.5" aria-hidden="true" />
             </Link>
           )}
         </div>

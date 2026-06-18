@@ -4,9 +4,28 @@ import type { Tag } from '@zqcms/shared/types';
 import Link from 'next/link';
 import { Hash } from 'lucide-react';
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:11001';
+
 export const metadata: Metadata = {
   title: '标签',
   description: '浏览所有标签',
+  alternates: {
+    canonical: `${siteUrl}/tag`,
+  },
+  openGraph: {
+    title: '标签',
+    description: '浏览所有标签',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary',
+    title: '标签',
+    description: '浏览所有标签',
+  },
+  robots: {
+    index: false,
+    follow: true,
+  },
 };
 
 export default async function TagListPage() {

@@ -12,6 +12,7 @@ function QrCodeButton({ name, imgUrl }: { name: string; imgUrl: string }) {
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
+          aria-hidden="true"
         >
           <path
             strokeLinecap="round"
@@ -26,7 +27,7 @@ function QrCodeButton({ name, imgUrl }: { name: string; imgUrl: string }) {
         <div className="rounded-lg border border-gray-100 bg-white p-5 shadow-2xl shadow-gray-300/50 min-w-[200px]">
           <img
             src={imgUrl}
-            alt={name}
+            alt={`${name} 二维码`}
             className="h-56 w-56 rounded-lg object-contain bg-gray-50"
           />
           <p className="mt-3 text-center text-sm font-medium text-gray-500">
@@ -49,12 +50,13 @@ function FooterWave() {
     "M0,64L48,58.7C96,53,192,43,288,48C384,53,480,75,576,74.7C672,75,768,53,864,42.7C960,32,1056,32,1152,37.3C1248,43,1344,53,1392,58.7L1440,64L1440,100L1392,100C1344,100,1248,100,1152,100C1056,100,960,100,864,100C768,100,672,100,576,100C480,100,384,100,288,100C192,100,96,100,48,100L0,100Z";
 
   return (
-    <div className="relative -mt-1 overflow-hidden leading-none pointer-events-none">
+    <div className="relative -mt-1 overflow-hidden leading-none pointer-events-none" aria-hidden="true">
       <div className="relative h-[50px] sm:h-[70px] w-[200%] animate-wave2">
         <svg
           className="absolute left-0 top-0 bottom-0 w-1/2 h-full text-gray-50"
           viewBox="0 0 1440 100"
           preserveAspectRatio="none"
+          aria-hidden="true"
         >
           <path d={wavePath} fill="currentColor" />
         </svg>
@@ -62,6 +64,7 @@ function FooterWave() {
           className="absolute left-1/2 top-0 bottom-0 w-1/2 h-full text-gray-50"
           viewBox="0 0 1440 100"
           preserveAspectRatio="none"
+          aria-hidden="true"
         >
           <path d={wavePath} fill="currentColor" />
         </svg>
@@ -113,10 +116,10 @@ export function Footer({ settings }: FooterProps) {
           <div className="grid gap-10 md:grid-cols-2">
             {/* Contact */}
             <div>
-              <h4 className="text-sm font-semibold uppercase tracking-wider text-gray-400 mb-4">
+              <h2 className="text-sm font-semibold uppercase tracking-wider text-gray-400 mb-4">
                 联系方式
-              </h4>
-              <div className="space-y-2.5 text-sm text-gray-500">
+              </h2>
+              <address className="not-italic space-y-2.5 text-sm text-gray-500">
                 {settings.contactEmail && (
                   <p className="flex items-center gap-2">
                     <svg
@@ -124,6 +127,7 @@ export function Footer({ settings }: FooterProps) {
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
+                      aria-hidden="true"
                     >
                       <path
                         strokeLinecap="round"
@@ -142,6 +146,7 @@ export function Footer({ settings }: FooterProps) {
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
+                      aria-hidden="true"
                     >
                       <path
                         strokeLinecap="round"
@@ -160,6 +165,7 @@ export function Footer({ settings }: FooterProps) {
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
+                      aria-hidden="true"
                     >
                       <path
                         strokeLinecap="round"
@@ -177,15 +183,15 @@ export function Footer({ settings }: FooterProps) {
                     {settings.address}
                   </p>
                 )}
-              </div>
+              </address>
             </div>
 
             {/* Social Links + QR Codes */}
             {(hasSocial || hasQr) && (
               <div>
-                <h4 className="text-sm font-semibold uppercase tracking-wider text-gray-400 mb-4">
+                <h2 className="text-sm font-semibold uppercase tracking-wider text-gray-400 mb-4">
                   关注我们
-                </h4>
+                </h2>
                 <div className="flex flex-wrap gap-3">
                   {/* Regular links */}
                   {hasSocial &&
@@ -203,6 +209,7 @@ export function Footer({ settings }: FooterProps) {
                           fill="none"
                           viewBox="0 0 24 24"
                           stroke="currentColor"
+                          aria-hidden="true"
                         >
                           <path
                             strokeLinecap="round"
