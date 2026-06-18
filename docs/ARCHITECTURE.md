@@ -3,55 +3,79 @@
 ## 总体架构
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                    用户浏览器                             │
-│   访问 /docs/getting-started  →  获取完整 HTML           │
-└──────────────┬──────────────────────────────────────────┘
-               │ HTTP Request
-┌──────────────▼──────────────────────────────────────────┐
-│           Next.js 前端站点 (端口 11001)                   │
-│                                                         │
-│  Server Components 在服务端执行：                         │
-│  ① 并行请求 Bun API 获取数据                             │
-│  ② generateMetadata() 生成 SEO 元数据                    │
-│  ③ 渲染 Layout + Navbar + Article + Footer              │
-│  ④ 返回完整 HTML（含内联 CSS / 不含 JS 空白页）           │
-│                                                         │
-│  渲染流程：                                              │
-│  fetch('http://localhost:11003/api/settings')           │
-│  fetch('http://localhost:11003/api/categories')         │
-│  fetch('http://localhost:11003/api/posts/...')          │
-│     ↓                                                   │
-│  Layout → Header → Navbar(categories) → Article → Footer│
-└──────────────┬──────────────────────────────────────────┘
-               │ HTTP (服务端 fetch)
-┌──────────────▼──────────────────────────────────────────┐
-│        Bun + Elysia.js API 服务 (端口 11003)             │
-│                                                         │
-│  Routes (路由层)  →  Services (业务逻辑)  →  Prisma ORM  │
-│                                                         │
-│  Middleware: JWT 认证、CORS、错误处理                     │
-└──────────────┬──────────────────────────────────────────┘
-               │ Prisma Client
-┌──────────────▼──────────────────────────────────────────┐
-│                  MySQL 8.0 数据库                        │
-│  表: SiteSettings / Category / Post / User /            │
-│      Tag / PostTag / PageBlock / Media                  │
-└─────────────────────────────────────────────────────────┘
-
-
-┌──────────────────────────────────────────────────────────┐
-│        Vite + React 管理后台 (端口 11002)                 │
-│                                                         │
-│  纯 SPA 应用，浏览器端直接请求 API                         │
-│  Vite 开发代理: /api → http://localhost:11003            │
-│                                                         │
-│  认证流程:                                               │
-│  ① POST /api/auth/login → 返回 JWT                     │
-│  ② 存储到 localStorage                                  │
-│  ③ 后续请求 Header: Authorization: Bearer <token>       │
-└──────────────────────────────────────────────────────────┘
+                   ┌────────────────────────────────────────┐
+                   │          宿主机 Nginx (80/443)           │
+                   │  site1.example.com → 127.0.0.1:11001   │
+                   │  site2.example.com → 127.0.0.1:11001   │
+                   │  admin.example.com → 127.0.0.1:11001   │
+                   └──────────────────┬─────────────────────┘
+                                      │ Host 头透传
+                   ┌──────────────────▼─────────────────────┐
+                   │         Docker Compose 内部              │
+                   │                                         │
+                   │  ┌─────────────────────────────────┐   │
+                   │  │        Nginx (:80)              │   │
+                   │  │  admin.* → 静态文件 (admin-dist) │   │
+                   │  │  *       → proxy_pass web:11001 │   │
+                   │  │  /api/*  → proxy_pass server:11003│  │
+                   │  └─────────────────────────────────┘   │
+                   │                                         │
+                   │  ┌──────────┐ ┌──────────┐ ┌────────┐ │
+                   │  │  MySQL   │ │  Server  │ │  Web   │ │
+                   │  │  :3306   │ │  :11003  │ │ :11001 │ │
+                   │  └──────────┘ └──────────┘ └────────┘ │
+                   └─────────────────────────────────────────┘
 ```
+
+---
+
+## 多站点架构
+
+### 站点识别流程
+
+```
+浏览器请求 site1.example.com
+        │
+        ▼
+宿主机 Nginx → proxy_pass http://127.0.0.1:11001
+              → proxy_set_header Host site1.example.com
+        │
+        ▼
+Docker Nginx → proxy_pass http://web:11001
+             → proxy_set_header Host site1.example.com
+        │
+        ▼
+Next.js middleware.ts:
+  ① 读取 request.headers.get('host') → "site1.example.com"
+  ② 调用 GET /api/sites/lookup?domain=site1.example.com
+  ③ 后端查 Site 表 domain 字段 → { id: 1, slug: "site1" }
+  ④ 设置 x-zqcms-site: site1 header
+  ⑤ 写入 cookie zqcms_site=site1
+        │
+        ▼
+所有 API 请求自动附带 ?site=site1 参数
+        │
+        ▼
+后端 site middleware:
+  优先级: X-Site-Id → ?site= → Host domain → 默认站点
+        │
+        ▼
+数据库查询自动 WHERE siteId = 1
+```
+
+### 站点数据隔离
+
+每个 `Site` 拥有独立的：
+
+| 资源 | 隔离方式 |
+|------|---------|
+| 分类 (Category) | `siteId` 外键 |
+| 文章 (Post) | `siteId` 外键 |
+| 媒体 (Media) | `siteId` 外键 |
+| 配置 (Site 表) | 一条记录一个站点 |
+| 反馈 (Feedback) | `siteId` 外键 |
+
+标签 (Tag) 和用户 (User) 为**全局共享**。
 
 ---
 
@@ -63,35 +87,39 @@
 
 ```
 src/
-├── index.ts              # Elysia 入口，注册所有路由和中间件
-├── routes/               # 路由层：定义 HTTP 方法和参数校验
-│   ├── auth.ts           # POST /api/auth/login
-│   ├── posts.ts          # CRUD + 排序 + slug 查询
-│   ├── categories.ts     # CRUD + 树形结构 + 排序
-│   ├── settings.ts       # GET/PUT 站点配置
-│   ├── media.ts          # 文件上传和列表
-│   ├── page-blocks.ts    # 首页区块 CRUD + 排序
-│   ├── tags.ts           # 标签管理
-│   └── sitemap.ts        # 动态站点地图
-├── services/             # 业务逻辑层：数据查询、校验、事务
+├── index.ts                   # Elysia 入口
+│   ├── CORS（动态 origin）     # 支持开发/生产切换
+│   ├── JWT 认证上下文           # 解析 Bearer token
+│   ├── 站点识别上下文           # 注入 site + siteId
+│   ├── GET /api/sites/lookup   # 域名→站点查询（公开）
+│   └── GET /uploads/*          # 静态文件服务
+├── routes/                    # 路由层（HTTP + 参数校验）
+│   ├── auth.ts                # POST /api/auth/login
+│   ├── posts.ts               # CRUD + 批量操作 + 排序
+│   ├── categories.ts          # CRUD + 树形 + 排序
+│   ├── sites.ts               # GET/PUT 当前站点
+│   ├── sites-manage.ts        # CRUD 多站点
+│   ├── tags.ts                # CRUD + 批量创建
+│   ├── media.ts               # 上传 + 列表
+│   ├── feedback.ts            # 公开提交 + 管理
+│   ├── users.ts               # 用户管理（Admin only）
+│   ├── llm.ts                 # AI 辅助配置 + 调用
+│   ├── publish.ts             # 平台发布
+│   └── sitemap.ts             # 动态 sitemap（已废弃，改为 Next.js 生成）
+├── services/                  # 业务逻辑层
 │   ├── post.service.ts
 │   ├── category.service.ts
+│   ├── tag.service.ts
 │   ├── auth.service.ts
-│   ├── settings.service.ts
-│   ├── media.service.ts
-│   ├── page-block.service.ts
-│   └── tag.service.ts
-├── middleware/            # 中间件
-│   └── auth.ts           # JWT 解析和认证守卫
-└── lib/                  # 工具库
-    ├── prisma.ts         # Prisma Client 单例
-    └── jwt.ts            # JWT 签发和验证
+│   └── ...
+├── middleware/                 # 中间件
+│   ├── auth.ts                # JWT 解析 + beforeHandle 守卫
+│   └── site.ts                # 站点识别（X-Site-Id / ?site / Host / default）
+└── lib/                       # 工具库
+    ├── prisma.ts              # Prisma Client 单例
+    ├── jwt.ts                 # JWT 签发/验证
+    └── revalidate.ts          # 前端缓存刷新通知
 ```
-
-**关键设计决策**：
-- 文章路由使用 `/posts/:categorySlug/:slug` 和 `/posts/by-id/:id` 避免路由冲突
-- 排序接口统一为 `POST /reorder`，接收 `{ items: [{ id, sortOrder }] }` 批量更新
-- 分类支持无限层级嵌套（`parentId` 自引用）
 
 ### 2. 前台站点层 (`packages/web`)
 
@@ -99,141 +127,150 @@ src/
 
 ```
 src/app/
-├── layout.tsx                    # 根布局（字体、全局样式、metadata）
-├── (site)/
-│   ├── layout.tsx                # ★ 站点唯一布局
-│   │   ├── fetchAPI('/settings')     → SiteSettings
-│   │   ├── fetchAPI('/categories')   → 导航菜单
-│   │   └── 返回: <Header> + {children} + <Footer>
-│   ├── page.tsx                  # 首页
-│   │   ├── fetchAPI('/page-blocks?pageType=home')
-│   │   └── 遍历 blocks 渲染对应区块组件
-│   └── [...slug]/page.tsx        # ★ 动态路由（统一处理）
-│       ├── slug.length === 1 → 分类页（描述 + 文章列表）
-│       ├── slug.length === 2 → 文章页（Markdown 渲染）
-│       └── 或 → 嵌套分类页
+├── layout.tsx                     # 根布局（meta/OG/Twitter/GA/skip-link）
+├── robots.ts                      # robots.txt（Next.js 约定）
+├── sitemap.ts                     # 动态 sitemap.xml（按站点生成）
+├── rss.xml/route.ts               # RSS 2.0 Feed（GET handler）
+├── api/revalidate/route.ts        # 缓存刷新（POST + Bearer 鉴权）
+└── (site)/
+    ├── layout.tsx                 # 站点布局
+    │   ├── fetchAPI('/site')           → SiteSettings
+    │   ├── fetchAPI('/categories')     → 导航菜单
+    │   └── <Header> + <Breadcrumb> + <main> + <Footer>
+    ├── page.tsx                   # 首页（热门文章 + 标签云 + 分类）
+    ├── [...slug]/page.tsx         # ★ 统一路由
+    │   ├── 末段为数字 → 文章页（Markdown + JSON-LD + OG）
+    │   └── 否则     → 分类页（描述 + 文章列表）
+    ├── search/page.tsx            # 搜索页（noindex）
+    └── tag/
+        ├── page.tsx               # 标签云（noindex）
+        └── [slug]/page.tsx        # 标签文章列表
 ```
 
 **SSR 数据流**：
-1. 浏览器请求 `GET /docs/getting-started`
-2. Next.js Server 执行 `CatchAllPage` Server Component
-3. 服务端 `fetch()` 调用 Bun API（并行请求）
-4. 获取数据后渲染 HTML 字符串
-5. 同时执行 `generateMetadata()` 生成 SEO 标签
-6. 返回完整 HTML 到浏览器
+1. 请求到达 → Next.js Server
+2. `middleware.ts` 识别站点（Host → `/api/sites/lookup`）
+3. Server Component 并行调用 `fetchAPI()` 获取数据
+4. 渲染 HTML + 执行 `generateMetadata()` 生成 SEO 标签
+5. 返回完整 HTML（含 JSON-LD 结构化数据）
 
-**ISR（增量静态再生成）**：
-- API Client 中 `fetch` 设置 `next: { revalidate: 60 }` 
-- 每 60 秒自动检查数据更新，重新生成静态页面
+**isr（增量静态再生成）**：
+- API Client 中 `fetch` 设置 `next: { revalidate: 5 }`
+- 每 5 秒自动检查数据更新
 
 ### 3. 管理后台层 (`packages/admin`)
 
-采用 Vite + React 19 SPA 架构：
+Vite + React 19 SPA，通过 `X-Site-Id` header 切换管理站点：
 
 ```
 src/
-├── main.tsx                    # ReactDOM 入口
-├── App.tsx                     # React Router 路由配置
-├── pages/                      # 页面组件
-│   ├── LoginPage.tsx           # 登录
-│   ├── DashboardPage.tsx       # 仪表盘（统计卡片）
-│   ├── PostListPage.tsx        # 文章列表（分页 + 删除）
-│   ├── PostFormPage.tsx        # 文章编辑（Markdown 编辑器）
-│   ├── CategoryListPage.tsx    # 目录列表（树形结构）
-│   ├── CategoryFormPage.tsx    # 目录表单
-│   ├── PageBuilderPage.tsx     # ★ 首页可视化搭建
-│   ├── SettingsPage.tsx        # 站点配置表单
-│   └── MediaPage.tsx           # 媒体库（上传/复制/删除）
+├── App.tsx                      # React Router 路由
+├── pages/
+│   ├── LoginPage.tsx            # 登录
+│   ├── DashboardPage.tsx        # 仪表盘
+│   ├── PostListPage.tsx         # 文章管理（过滤/分页/批量操作）
+│   ├── PostFormPage.tsx         # 文章编辑（Markdown）
+│   ├── CategoryListPage.tsx     # 分类管理（树形拖拽）
+│   ├── TagListPage.tsx          # 标签管理（搜索/分页）
+│   ├── SitesPage.tsx            # 站点管理
+│   ├── SiteFormPage.tsx         # 站点配置
+│   ├── SettingsPage.tsx         # 站点设置
+│   ├── MediaPage.tsx            # 媒体库
+│   ├── FeedbackListPage.tsx     # 反馈管理
+│   ├── LlmConfigPage.tsx        # AI 配置
+│   ├── PublishPlatformPage.tsx  # 发布平台
+│   └── UserListPage.tsx         # 用户管理
 ├── components/
-│   ├── layout/AdminLayout.tsx  # 侧边栏 + 顶部栏布局
-│   ├── editor/MarkdownEditor.tsx # @uiw/react-md-editor 封装
-│   └── sortable/               # 拖拽排序组件（预留）
+│   ├── layout/AdminLayout.tsx   # 侧边栏 + 站点切换器
+│   └── ui/                      # Tooltip, ConfirmDialog 等
 └── lib/
-    ├── api-client.ts           # fetch 封装（自动添加 JWT）
-    └── auth.ts                 # Token/User 管理工具
+    ├── api-client.ts            # fetch 封装（自动 JWT + X-Site-Id）
+    └── auth.ts                  # Token/User 管理
 ```
 
 **认证流程**：
-1. 登录 → POST `/api/auth/login` → 获取 JWT
+1. 登录 → `POST /api/auth/login` → 获取 JWT
 2. JWT 存储到 `localStorage('zqcms_token')`
-3. 所有 API 请求自动附加 `Authorization: Bearer <token>`
-4. 后端中间件验证 JWT，拒绝未认证请求
+3. 所有请求自动附加 `Authorization: Bearer <token>` + `X-Site-Id: <id>`
+4. 后端 `authBeforeHandle` 守卫验证
 
 ---
 
-## 首页可视化搭建
+## 文章路由策略
 
-### 区块系统
-
-首页由一组可排序的 **PageBlock** 组成，每个区块有类型和配置：
+使用 `[...slug]` catch-all 统一处理，通过 URL 末段是否为数字区分文章/分类：
 
 ```
-PageBlock {
-  id: number
-  pageType: "home"
-  blockType: BlockType  ← HERO | FEATURES | CTA | POST_LIST | FAQ | MARKDOWN | CATEGORY_LIST
-  title: string?
-  config: JSON           ← 各类型自定义配置
-  sortOrder: number
-  isVisible: boolean
-}
+/                           → 首页
+/docs                       → 分类页（docs 分类）
+/docs/42                    → 文章页（id=42，分类 docs 下）
+/docs/guide                 → 子分类页（docs/guide 分类）
+/docs/guide/99              → 文章页（id=99，分类 docs/guide 下）
 ```
 
-### 区块类型及配置
-
-| 类型 | config 结构 | 渲染方式 |
-|------|------------|----------|
-| **HERO** | `{ title, subtitle, ctaText, ctaLink, alignment }` | 全宽横幅，渐变背景 |
-| **FEATURES** | `{ columns, items: [{ icon, title, desc }] }` | 网格图标列表 |
-| **CTA** | `{ title, desc, btnText, btnLink, bgColor }` | 居中行动号召 |
-| **POST_LIST** | `{ categoryId?, limit, layout, columns }` | **服务端 fetch 文章列表** |
-| **CATEGORY_LIST** | `{ columns, showCount }` | **服务端 fetch 分类列表** |
-| **FAQ** | `{ items: [{ question, answer }] }` | 折叠面板 |
-| **MARKDOWN** | `{ content: string }` | 自由 Markdown 内容 |
-
-### 前台渲染流程
-
-```typescript
-// app/(site)/page.tsx
-export default async function HomePage() {
-  const blocks = await fetchAPI('/page-blocks?pageType=home');
-  
-  return blocks.filter(b => b.isVisible).map(block => (
-    <PageBlockRenderer key={block.id} block={block} />
-  ));
-}
-```
-
-- Hero、Features、CTA、FAQ、Markdown → 纯客户端组件，直接渲染 config
-- POST_LIST、CATEGORY_LIST → **服务端组件**，再次 fetch API 获取实时数据
-- 所有渲染在服务端完成，保证 SSR
+路由判断：
+1. `slug` 最后一段为纯数字 → 调用 `/api/posts/by-id/:id` 渲染文章
+2. 否则 → 调用 `/api/categories/:fullSlug` 渲染分类页
 
 ---
 
-## 数据驱动设计
+## JSON-LD 结构化数据
 
-### 站点可复制性
+文章页输出两类结构化数据：
 
-换一个新站点只需：
-1. 新建数据库 `zqcms_site2`
-2. 执行 `init.sql` 创建表结构
-3. 修改 `SiteSettings` 表中的站点名称、Logo、联系方式
-4. 创建新的 Category 导航和 Post 文章
-
-同一套代码即可部署无限个独立站点。
-
-### 页面路由策略
-
-使用 `[...slug]` catch-all 路由统一处理所有前台页面：
-
-```
-/                       → HomePage（首页区块渲染）
-/docs                   → CategoryPage（分类描述 + 文章列表）
-/docs/getting-started   → PostPage（Markdown 文章）
-/docs/api/rest          → 子分类页 或 查看文章
+**Article**：
+```json
+{
+  "@type": "Article",
+  "headline": "文章标题",
+  "description": "摘要",
+  "image": ["封面图"],
+  "datePublished": "2026-06-15T10:00:00Z",
+  "dateModified": "2026-06-16T08:00:00Z",
+  "author": { "@type": "Person", "name": "作者" },
+  "publisher": { "@type": "Organization", "name": "ZQCMS" },
+  "mainEntityOfPage": { "@type": "WebPage", "@id": "https://..." }
+}
 ```
 
-路由判断逻辑：
-1. 1 段 slug → 尝试匹配 Category → 展示分类页
-2. 2 段 slug → 尝试匹配 Category + Post → 展示文章页
-3. N 段 slug → 尝试匹配嵌套 Category
+**BreadcrumbList**：
+```json
+{
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "首页", "item": "https://..." },
+    { "@type": "ListItem", "position": 2, "name": "分类名", "item": "https://..." },
+    { "@type": "ListItem", "position": 3, "name": "文章标题" }
+  ]
+}
+```
+
+---
+
+## Docker 部署架构
+
+```
+docker compose up
+├── mysql (3306)           — MySQL 8.0，持久化 mysql_data 卷
+├── server (11003)         — Bun API，依赖 mysql，挂载 uploads_data 卷
+├── web (11001)            — Next.js standalone，依赖 server
+└── nginx (80→宿主机11001)  — 多阶段构建(admin SPA + nginx)，依赖 web+server
+```
+
+Docker 内部网络 `zqcms-net` 为 bridge 模式，服务间通过容器名通信：
+- `server:11003` — API 地址
+- `web:11001` — 前端地址
+- `mysql:3306` — 数据库地址
+
+---
+
+## 前端代码分割
+
+重型交互组件采用 `next/dynamic` 懒加载，减少首屏 JS：
+
+| 组件 | 加载策略 |
+|------|---------|
+| SiteSwitcher | dynamic import（仅在 hover 时渲染） |
+| FeedbackButton | dynamic import |
+| SearchPanel | 已在 header 中，按需渲染（⌘K 触发） |
+| TableOfContents | 文章页按需渲染 |

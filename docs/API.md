@@ -6,6 +6,11 @@ Base URL: `http://localhost:11003/api`
 
 ## 认证
 
+所有需要认证的接口需在 Header 中附带：
+```
+Authorization: Bearer <token>
+```
+
 ### POST /api/auth/login
 
 管理员登录，获取 JWT Token。
@@ -31,7 +36,75 @@ Base URL: `http://localhost:11003/api`
 }
 ```
 
-**后续请求**：在 Header 中附带 `Authorization: Bearer <token>`
+---
+
+## 站点 (Sites)
+
+### GET /api/site
+
+获取当前站点配置（公开，无需认证）。站点由 Host 头 / `X-Site-Id` / `?site=` 参数自动识别。
+
+### PUT /api/site （需认证）
+
+更新当前站点配置。请求体中所有字段可选：
+```json
+{
+  "name": "站点名称",
+  "slug": "site-slug",
+  "domain": "example.com",
+  "description": "站点描述",
+  "logo": "/uploads/1/logo.png",
+  "favicon": "/uploads/1/favicon.ico",
+  "primaryColor": "#3B82F6",
+  "contactEmail": "hello@example.com",
+  "contactPhone": "13800138000",
+  "address": "北京市朝阳区",
+  "socialLinks": { "github": "https://github.com/..." },
+  "socialQRCodes": { "微信公众号": "/uploads/1/qr.png" },
+  "footerText": "页脚文案",
+  "copyright": "© 2026 Company",
+  "gaId": "G-XXXXXXXXXX",
+  "icp": "京ICP备2024000001号"
+}
+```
+
+### GET /api/sites/lookup?domain=example.com
+
+通过域名查询站点（公开，无需认证）。用于 middleware 域名→站点映射。
+
+**响应**:
+```json
+{
+  "id": 1,
+  "slug": "site1",
+  "domain": "site1.example.com"
+}
+```
+
+### GET /api/sites
+
+站点列表（管理后台使用）。
+
+### POST /api/sites （需认证）
+
+创建新站点：
+```json
+{
+  "name": "新站点",
+  "slug": "new-site",
+  "domain": "new.example.com",
+  "description": "描述",
+  "isActive": true
+}
+```
+
+### PUT /api/sites/:id （需认证）
+
+更新站点。
+
+### DELETE /api/sites/:id （需认证）
+
+删除站点。
 
 ---
 
@@ -39,7 +112,7 @@ Base URL: `http://localhost:11003/api`
 
 ### GET /api/posts
 
-获取文章列表（支持分页、筛选、搜索）。
+获取文章列表（公开，支持多站点隔离、分页、筛选、搜索）。
 
 **查询参数**:
 
@@ -48,39 +121,19 @@ Base URL: `http://localhost:11003/api`
 | page | number | 1 | 页码 |
 | pageSize | number | 20 | 每页数量 |
 | status | string | - | DRAFT / PUBLISHED / ARCHIVED |
-| featured | boolean | - | 是否特色文章 |
-| categorySlug | string | - | 按分类筛选 |
+| categorySlug | string | - | 按分类 slug 筛选 |
+| categoryId | number | - | 按分类 ID 筛选 |
 | search | string | - | 搜索关键词（标题/内容/摘要） |
-| tagId | number | - | 按标签筛选 |
+| isFeatured | boolean | - | 是否精选 |
+| tagSlug | string | - | 按标签 slug 筛选 |
+| orderBy | string | publishedAt | 排序字段 |
+| orderDir | string | desc | asc / desc |
+| includeDescendants | boolean | false | 是否包含子分类文章 |
 
 **响应**:
 ```json
 {
-  "data": [
-    {
-      "id": 1,
-      "title": "快速开始指南",
-      "slug": "quickstart",
-      "content": "# 快速开始...",
-      "excerpt": "5分钟快速上手...",
-      "coverImage": null,
-      "status": "PUBLISHED",
-      "sortOrder": 1,
-      "categoryId": 1,
-      "category": { "id": 1, "name": "产品文档", "slug": "docs" },
-      "author": { "id": "...", "name": "管理员", "email": "admin@zqcms.com" },
-      "tags": [
-        { "tag": { "id": 1, "name": "教程", "slug": "tutorial" } }
-      ],
-      "seoTitle": "快速开始 - ZQCMS",
-      "seoDesc": "5分钟快速上手...",
-      "viewCount": 1024,
-      "isFeatured": true,
-      "publishedAt": "2026-06-15T10:00:00.000Z",
-      "createdAt": "2026-06-15T10:00:00.000Z",
-      "updatedAt": "2026-06-15T10:00:00.000Z"
-    }
-  ],
+  "data": [ { "id": 1, "title": "...", ... } ],
   "total": 100,
   "page": 1,
   "pageSize": 20,
@@ -88,64 +141,45 @@ Base URL: `http://localhost:11003/api`
 }
 ```
 
-### GET /api/posts/featured
-
-获取特色文章列表（最多 10 篇）。
-
-### GET /api/posts/:categorySlug/:slug
-
-按分类 slug + 文章 slug 获取单篇文章。
-
-**示例**: `GET /api/posts/docs/quickstart`
-
 ### GET /api/posts/by-id/:id
 
-按 ID 获取文章（管理后台使用）。
-
----
+按 ID 获取单篇文章。
 
 ### POST /api/posts （需认证）
 
-创建文章。
-
-**请求体**:
+创建文章：
 ```json
 {
-  "title": "新文章标题",
-  "slug": "new-post",
-  "content": "# 标题\n\nMarkdown 内容...",
-  "excerpt": "文章摘要",
-  "coverImage": "https://example.com/image.jpg",
+  "title": "文章标题",
+  "slug": "post-slug",
+  "content": "# Markdown 内容",
+  "excerpt": "摘要",
+  "coverImage": "/uploads/1/cover.jpg",
   "status": "DRAFT",
-  "sortOrder": 0,
   "categoryId": 1,
   "seoTitle": "SEO 标题",
   "seoDesc": "SEO 描述",
   "isFeatured": false,
+  "isPinned": false,
   "tagIds": [1, 2]
 }
 ```
 
 ### PUT /api/posts/by-id/:id （需认证）
 
-更新文章。请求体与创建相同（所有字段可选）。
+更新文章。所有字段可选。
 
 ### DELETE /api/posts/by-id/:id （需认证）
 
-删除文章（不可恢复）。
+删除文章。
 
-### POST /api/posts/reorder （需认证）
+### POST /api/posts/batch （需认证）
 
-文章拖拽排序（批量更新 sortOrder）。
-
-**请求体**:
+批量操作文章：
 ```json
 {
-  "items": [
-    { "id": 1, "sortOrder": 0 },
-    { "id": 3, "sortOrder": 1 },
-    { "id": 2, "sortOrder": 2 }
-  ]
+  "ids": [1, 2, 3],
+  "action": "publish|unpublish|pin|unpin|feature|unfeature|delete"
 }
 ```
 
@@ -155,40 +189,18 @@ Base URL: `http://localhost:11003/api`
 
 ### GET /api/categories
 
-获取分类列表。
+获取分类列表（公开）。
 
 **查询参数**:
 
 | 参数 | 类型 | 说明 |
 |------|------|------|
-| tree | boolean | 是否返回树形结构 |
 | all | boolean | 是否包含隐藏分类 |
-| withPosts | boolean | 是否附带文章列表 |
+| tree | boolean | 是否返回树形结构 |
 
 ### GET /api/categories/tree
 
-获取分类树（多级嵌套结构）。
-
-**响应**:
-```json
-[
-  {
-    "id": 1,
-    "name": "产品文档",
-    "slug": "docs",
-    "sortOrder": 1,
-    "isVisible": true,
-    "children": [
-      {
-        "id": 7,
-        "name": "快速开始",
-        "slug": "docs/getting-started",
-        "children": []
-      }
-    ]
-  }
-]
-```
+获取分类树（多级嵌套）。
 
 ### GET /api/categories/:slug
 
@@ -196,20 +208,16 @@ Base URL: `http://localhost:11003/api`
 
 ### GET /api/categories/:slug?withPosts=true
 
-获取分类详情及其下的所有文章。
-
----
+获取分类详情及其文章（支持分页：`&page=1&pageSize=20&includeDescendants=true`）。
 
 ### POST /api/categories （需认证）
 
-创建分类。
-
-**请求体**:
+创建分类：
 ```json
 {
   "name": "新分类",
   "slug": "new-category",
-  "description": "分类描述",
+  "description": "描述",
   "icon": "BookOpen",
   "sortOrder": 0,
   "isVisible": true,
@@ -219,107 +227,17 @@ Base URL: `http://localhost:11003/api`
 
 ### PUT /api/categories/:id （需认证）
 
-更新分类。请求体与创建相同（所有字段可选）。
+更新分类。
 
 ### DELETE /api/categories/:id （需认证）
 
-删除分类。注意：该分类下的文章也会被级联删除。
+删除分类。**文章不会被删除**，其 `categoryId` 自动置为 `null`（Prisma `onDelete: SetNull`）。
 
 ### POST /api/categories/reorder （需认证）
 
-分类拖拽排序（批量更新 sortOrder）。请求格式与文章排序相同。
-
----
-
-## 站点配置 (Settings)
-
-### GET /api/settings
-
-获取站点全局配置。
-
-**响应**:
+拖拽排序：
 ```json
-{
-  "id": 1,
-  "siteName": "ZQCMS - 内容管理系统",
-  "siteDescription": "快速构建产品内容站点...",
-  "logo": null,
-  "favicon": null,
-  "primaryColor": "#3B82F6",
-  "contactEmail": "hello@zqcms.com",
-  "contactPhone": null,
-  "address": null,
-  "socialLinks": { "github": "https://github.com/zqcms" },
-  "footerText": "用技术让内容管理更简单",
-  "copyright": "© 2026 ZQCMS",
-  "gaId": null
-}
-```
-
-### PUT /api/settings （需认证）
-
-更新站点配置。所有字段可选。
-
----
-
-## 首页区块 (Page Blocks)
-
-### GET /api/page-blocks?pageType=home
-
-获取指定页面的区块列表（按 sortOrder 排序）。
-
-### GET /api/page-blocks/:id
-
-获取单个区块详情。
-
----
-
-### POST /api/page-blocks （需认证）
-
-创建新区块。
-
-**请求体**:
-```json
-{
-  "pageType": "home",
-  "blockType": "HERO",
-  "title": "首页横幅",
-  "config": {
-    "title": "快速构建内容站点",
-    "subtitle": "数据驱动的 CMS...",
-    "ctaText": "查看文档",
-    "ctaLink": "/docs"
-  },
-  "sortOrder": 0,
-  "isVisible": true
-}
-```
-
-### PUT /api/page-blocks/:id （需认证）
-
-更新区块。所有字段可选。
-
-### DELETE /api/page-blocks/:id （需认证）
-
-删除区块。
-
-### POST /api/page-blocks/reorder （需认证）
-
-区块拖拽排序。请求格式与文章排序相同。
-
-### BlockType 枚举
-
-```
-HERO          - 全宽横幅
-FEATURES      - 特性列表
-CTA           - 行动号召
-POST_LIST     - 文章列表
-CATEGORY_LIST - 分类列表
-FAQ           - 折叠问答
-MARKDOWN      - 自由 Markdown 内容
-TESTIMONIALS  - 客户评价（预留）
-CONTACT       - 联系方式（预留）
-DIVIDER       - 分割线（预留）
+{ "items": [{ "id": 1, "sortOrder": 0 }, { "id": 2, "sortOrder": 1 }] }
 ```
 
 ---
@@ -328,19 +246,33 @@ DIVIDER       - 分割线（预留）
 
 ### GET /api/tags
 
-获取所有标签。
+获取标签列表（公开）。
+
+### GET /api/tags/by-slug/:slug
+
+按 slug 获取标签。
 
 ### POST /api/tags （需认证）
 
-创建标签。
-
+创建标签：
 ```json
 { "name": "教程", "slug": "tutorial" }
 ```
 
+### PUT /api/tags/:id （需认证）
+
+更新标签。
+
 ### DELETE /api/tags/:id （需认证）
 
-删除标签。
+删除标签。**文章不会被删除**，仅删除关联记录（Prisma `onDelete: Cascade` 在 `PostTag` 表）。
+
+### POST /api/tags/batch-create （需认证）
+
+批量创建标签（已有则复用）：
+```json
+{ "names": ["教程", "前端", "React"] }
+```
 
 ---
 
@@ -348,18 +280,16 @@ DIVIDER       - 分割线（预留）
 
 ### GET /api/media
 
-获取上传文件列表。
+文件列表。
 
 **查询参数**: `page`, `pageSize`, `mimeType`
 
 ### POST /api/media/upload （需认证）
 
 上传文件（multipart/form-data）。
-
-**表单字段**: `file` — 文件
-
-**支持格式**: JPEG, PNG, GIF, WebP, SVG, PDF, MP4
-**大小限制**: 10MB
+- 字段名: `file`
+- 支持: JPEG / PNG / GIF / WebP / SVG / PDF / MP4
+- 大小: ≤ 10MB
 
 ### DELETE /api/media/:id （需认证）
 
@@ -367,18 +297,150 @@ DIVIDER       - 分割线（预留）
 
 ---
 
-## 站点地图 (Sitemap)
+## 反馈 (Feedback)
 
-### GET /api/sitemap
+### POST /api/feedback （公开）
 
-返回 XML 格式的站点地图。
+提交反馈：
+```json
+{
+  "name": "张三",
+  "phone": "13800138000",
+  "email": "zhangsan@example.com",
+  "content": "建议增加暗色模式",
+  "pageUrl": "/docs/quickstart"
+}
+```
+> `phone` 或 `email` 至少提供一个。
+
+### GET /api/feedback （需认证）
+
+反馈列表（管理后台）。
+
+### PUT /api/feedback/:id （需认证）
+
+更新反馈状态：
+```json
+{ "status": "reviewed" }
+```
+状态可选: `pending` / `reviewed` / `resolved` / `closed`
+
+### DELETE /api/feedback/:id （需认证）
+
+删除反馈。
 
 ---
 
-## 错误响应格式
+## 用户 (Users) — 仅管理员
+
+### GET /api/users
+
+用户列表。
+
+### POST /api/users （需认证）
+
+创建用户：
+```json
+{
+  "email": "editor@example.com",
+  "password": "password123",
+  "name": "编辑",
+  "role": "EDITOR"
+}
+```
+
+### PUT /api/users/:id （需认证）
+
+更新用户。
+
+### DELETE /api/users/:id （需认证）
+
+删除用户。
+
+---
+
+## AI 辅助 (LLM)
+
+### GET /api/llm/configs （需认证）
+
+LLM 配置列表。
+
+### POST /api/llm/configs （需认证）
+
+创建 LLM 配置：
+```json
+{
+  "name": "GPT-4o",
+  "provider": "openai",
+  "apiKey": "sk-...",
+  "baseUrl": "https://api.openai.com/v1",
+  "model": "gpt-4o",
+  "isActive": true
+}
+```
+
+### POST /api/llm/assist （需认证）
+
+AI 辅助内容生成：
+```json
+{
+  "action": "generate|summarize|extractTags|classify|generateTitle|format|generateSeo",
+  "content": "原始内容...",
+  "title": "可选标题",
+  "categories": ["分类1", "分类2"],
+  "existingTags": ["已有标签"]
+}
+```
+
+---
+
+## 内容发布 (Publish)
+
+### GET /api/publish/platforms （需认证）
+
+发布平台列表。
+
+### POST /api/publish/platforms （需认证）
+
+创建发布平台：
+```json
+{
+  "name": "官方公众号",
+  "platform": "wechat",
+  "appId": "wx...",
+  "appSecret": "..."
+}
+```
+
+### POST /api/publish/submit （需认证）
+
+提交发布：
+```json
+{ "postId": 1, "platformId": 1 }
+```
+
+---
+
+## 缓存刷新 (Revalidate)
+
+### POST /api/revalidate
+
+通知前端刷新缓存。需要 Bearer Token 鉴权（环境变量 `REVALIDATE_TOKEN`）。
+
+```json
+{ "paths": ["/", "/docs/42"], "token": "your-revalidate-token" }
+```
+
+或通过 HTTP Header:
+```
+Authorization: Bearer your-revalidate-token
+```
+
+---
+
+## 错误响应
 
 所有错误返回统一格式：
-
 ```json
 {
   "success": false,
@@ -386,7 +448,7 @@ DIVIDER       - 分割线（预留）
 }
 ```
 
-常见 HTTP 状态码：
+常见状态码：
 
 | 状态码 | 说明 |
 |--------|------|
@@ -394,4 +456,6 @@ DIVIDER       - 分割线（预留）
 | 400 | 请求参数错误 |
 | 401 | 未认证（缺少或无效 JWT） |
 | 404 | 资源不存在 |
+| 409 | 资源冲突（唯一键重复） |
+| 422 | 参数校验失败 |
 | 500 | 服务器内部错误 |
