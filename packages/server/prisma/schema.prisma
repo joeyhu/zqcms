@@ -102,6 +102,9 @@ model Post {
   @@index([siteId, sortOrder])
   @@index([siteId, categoryId, status, sortOrder])
   @@index([slug, status])
+  @@fulltext([title])
+  @@fulltext([content])
+  @@fulltext([excerpt])
 }
 
 enum PostStatus {

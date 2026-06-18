@@ -74,11 +74,26 @@ export const postService = {
     }
 
     if (search) {
-      where.OR = [
-        { title: { contains: search } },
-        { content: { contains: search } },
-        { excerpt: { contains: search } },
-      ];
+      // Use fulltext + contains for comprehensive search
+      // Short / CJK terms use contains; longer terms benefit from fulltext
+      const isCJK = /[\u4e00-\u9fff]/.test(search);
+      const isShort = search.trim().length <= 2;
+
+      if (isCJK || isShort) {
+        // Chinese or short keyword: use contains (LIKE)
+        where.OR = [
+          { title: { contains: search } },
+          { content: { contains: search } },
+          { excerpt: { contains: search } },
+        ];
+      } else {
+        // English / longer keyword: use fulltext on title + contains on body
+        where.OR = [
+          { title: { search: search } },       // FULLTEXT MATCH
+          { content: { contains: search } },
+          { excerpt: { contains: search } },
+        ];
+      }
     }
     if (tagSlug) {
       const tag = await prisma.tag.findUnique({ where: { slug: tagSlug } });

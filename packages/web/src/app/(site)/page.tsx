@@ -64,17 +64,23 @@ export default async function HomePage() {
     "/categories?tree=true",
   ).catch(() => [] as Category[]);
 
-  const hasContent = hotResult.data.length > 0 || topTags.length > 0 || topCategories.length > 0;
+  const hasContent =
+    hotResult.data.length > 0 || topTags.length > 0 || topCategories.length > 0;
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6">
+    <div className="mx-auto max-w-7xl px-4 py-0 sm:px-6">
       {/* ================================================================ */}
       {/* Hero / Welcome Banner (shown when there's content)                */}
       {/* ================================================================ */}
       {hasContent && (
-        <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 mb-12 mt-2">
-          <div className="absolute inset-0 opacity-[0.04]"
-            style={{ backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 1px)', backgroundSize: '36px 36px' }}
+        <div className="relative overflow-hidden  bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 mb-12 mt-0">
+          <div
+            className="absolute inset-0 opacity-[0.04]"
+            style={{
+              backgroundImage:
+                "radial-gradient(circle, #fff 1px, transparent 1px)",
+              backgroundSize: "36px 36px",
+            }}
           />
           <div className="absolute -top-32 -right-16 w-72 h-72 rounded-full bg-blue-500/10 blur-3xl" />
           <div className="absolute -bottom-16 -left-16 w-56 h-56 rounded-full bg-indigo-500/10 blur-3xl" />
@@ -100,7 +106,12 @@ export default async function HomePage() {
             title="热门文章"
             subtitle="最受欢迎的内容"
           />
-          <PostList posts={hotResult.data} layout="grid" columns={3} staggered />
+          <PostList
+            posts={hotResult.data}
+            layout="grid"
+            columns={2}
+            staggered
+          />
         </section>
       )}
 
@@ -134,61 +145,6 @@ export default async function HomePage() {
       )}
 
       {/* ================================================================ */}
-      {/* Section 3: Category Sections                                     */}
-      {/* ================================================================ */}
-      {topCategories.map((cat, catIndex) => (
-        <section
-          key={cat.id}
-          className="animate-fade-in-up mb-16"
-          style={{ animationDelay: `${0.2 + catIndex * 0.1}s` }}
-        >
-          <SectionTitle
-            icon={FolderOpen}
-            title={cat.name}
-            subtitle={cat.description || undefined}
-            href={`/${cat.slug}`}
-          />
-
-          {cat.children && cat.children.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {cat.children.map((child, childIndex) => {
-                const ChildIcon = getIconComponent(child.icon);
-                return (
-                  <Link
-                    key={child.id}
-                    href={`/${child.slug}`}
-                    className="animate-scale-in group flex items-start gap-4 rounded-lg border border-gray-100 bg-white p-5 shadow-sm transition-all duration-300 hover:shadow-lg hover:border-blue-200 hover:-translate-y-1"
-                    style={{ animationDelay: `${childIndex * 0.06}s` }}
-                  >
-                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-blue-50 to-indigo-50 text-blue-600 transition-all duration-300 group-hover:from-blue-100 group-hover:to-indigo-100 group-hover:scale-110">
-                      <ChildIcon className="h-5 w-5" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <h3 className="text-sm font-semibold text-gray-900 truncate group-hover:text-blue-600 transition-colors">
-                        {child.name}
-                      </h3>
-                      {child.description && (
-                        <p className="mt-1 text-xs text-gray-500 line-clamp-2 leading-relaxed">
-                          {child.description}
-                        </p>
-                      )}
-                      <div className="mt-2 flex items-center gap-1">
-                        <span className="text-xs text-gray-400">
-                          {child._count?.posts ?? 0} 篇文章
-                        </span>
-                      </div>
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
-          ) : (
-            <CategoryLatestPosts categorySlug={cat.slug} />
-          )}
-        </section>
-      ))}
-
-      {/* ================================================================ */}
       {/* Empty State                                                      */}
       {/* ================================================================ */}
       {!hasContent && (
@@ -197,9 +153,7 @@ export default async function HomePage() {
             <Flame className="h-10 w-10 text-white" />
           </div>
           <h2 className="text-2xl font-bold text-gray-900">欢迎使用 ZQCMS</h2>
-          <p className="mt-3 text-gray-500">
-            开始创建文章和目录来构建您的站点
-          </p>
+          <p className="mt-3 text-gray-500">开始创建文章和目录来构建您的站点</p>
         </div>
       )}
     </div>

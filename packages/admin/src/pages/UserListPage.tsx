@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { fetchAPI } from '@/lib/api-client';
+import { getUser } from '@/lib/auth';
 import { Plus, Edit3, Trash2, Shield, ShieldCheck, UserCheck, UserX, Key } from 'lucide-react';
 import { Tooltip } from '@/components/ui/Tooltip';
 import { useConfirm } from '@/components/ui/ConfirmDialog';
@@ -42,6 +43,7 @@ export function UserListPage() {
   const [form, setForm] = useState({ email: '', password: '', name: '', role: 'EDITOR', isActive: true, permissions: [] as string[] });
   const [saving, setSaving] = useState(false);
   const confirm = useConfirm();
+  const currentUser = getUser();
 
   const load = async () => {
     try {
@@ -165,11 +167,13 @@ export function UserListPage() {
                   <Edit3 className="h-4 w-4" />
                 </button>
               </Tooltip>
-              <Tooltip content="删除用户">
-                <button onClick={() => handleDelete(user)} className="rounded-lg p-2 text-gray-400 hover:bg-red-50 hover:text-red-600">
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              </Tooltip>
+              {user.id !== currentUser?.id && (
+                <Tooltip content="删除用户">
+                  <button onClick={() => handleDelete(user)} className="rounded-lg p-2 text-gray-400 hover:bg-red-50 hover:text-red-600">
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </Tooltip>
+              )}
             </div>
           </div>
         ))}
@@ -205,17 +209,26 @@ export function UserListPage() {
                 <div>
                   <label className="block text-sm font-medium mb-1">角色</label>
                   <select value={form.role} onChange={e => setForm(p => ({ ...p, role: e.target.value }))}
-                    className="block w-full rounded-lg border px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none">
+                    disabled={editingUser?.id === currentUser?.id}
+                    className="block w-full rounded-lg border px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none disabled:bg-gray-100 disabled:text-gray-400">
                     <option value="EDITOR">编辑</option>
                     <option value="ADMIN">管理员</option>
                   </select>
+                  {editingUser?.id === currentUser?.id && (
+                    <p className="mt-1 text-xs text-amber-600">不能修改自己的角色</p>
+                  )}
                 </div>
                 <div className="flex items-end pb-1">
                   <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={form.isActive} onChange={e => setForm(p => ({ ...p, isActive: e.target.checked }))}
-                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
-                    <span className="text-sm text-gray-700">启用账号</span>
+                    <input type="checkbox" checked={form.isActive}
+                      disabled={editingUser?.id === currentUser?.id}
+                      onChange={e => setForm(p => ({ ...p, isActive: e.target.checked }))}
+                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 disabled:opacity-50" />
+                    <span className={`text-sm ${editingUser?.id === currentUser?.id ? 'text-gray-400' : 'text-gray-700'}`}>启用账号</span>
                   </label>
+                  {editingUser?.id === currentUser?.id && (
+                    <p className="mt-1 text-xs text-amber-600">不能禁用自己</p>
+                  )}
                 </div>
               </div>
 
