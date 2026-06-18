@@ -46,6 +46,9 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     alternates: {
       canonical: '/',
+      types: {
+        'application/rss+xml': `${siteUrl}/rss.xml`,
+      },
     },
     icons: (settings.favicon as string)
       ? { icon: new URL(settings.favicon as string, siteUrl).toString() }
@@ -56,6 +59,10 @@ export async function generateMetadata(): Promise<Metadata> {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="zh-CN">
+      <head>
+        {/* Sitemap discovery — 搜索引擎发现站点地图 */}
+        <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
+      </head>
       <body className="min-h-screen text-gray-900 antialiased site-bg">
         {/* Skip to content — accessibility */}
         <a

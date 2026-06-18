@@ -11,6 +11,9 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ['/search', '/api/', '/_next/'],
       },
     ],
-    sitemap: `${siteUrl}/sitemap.xml`,
+    sitemap: [
+      `${siteUrl}/sitemap.xml`,
+      `${siteUrl}/rss.xml`,
+    ],
   };
 }
