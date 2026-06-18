@@ -18,6 +18,7 @@ import { SiteFormPage } from './pages/SiteFormPage';
 import { LlmConfigPage } from './pages/LlmConfigPage';
 import { PublishPlatformPage } from './pages/PublishPlatformPage';
 import { FeedbackListPage } from './pages/FeedbackListPage';
+import { UserListPage } from './pages/UserListPage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const token = localStorage.getItem('zqcms_token');
@@ -59,6 +60,7 @@ export function App() {
           <Route path="tags/:id/edit" element={<TagFormPage />} />
           <Route path="icons" element={<IconListPage />} />
           <Route path="feedback" element={<FeedbackListPage />} />
+          <Route path="users" element={<UserListPage />} />
         </Route>
       </Routes>
       </ConfirmProvider>

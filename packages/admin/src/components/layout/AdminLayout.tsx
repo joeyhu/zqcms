@@ -17,8 +17,10 @@ import {
   Send,
   MessageSquare,
   CheckCircle2,
+  Users,
 } from "lucide-react";
 import { logout } from "@/lib/auth";
+import { isAdmin } from "@/lib/auth";
 import { fetchAPI, setCurrentSiteId, getCurrentSiteId } from "@/lib/api-client";
 import { useConfirm } from "@/components/ui/ConfirmDialog";
 
@@ -34,6 +36,7 @@ const navItems = [
   { to: "/publish", icon: Send, label: "内容平台" },
   { to: "/feedback", icon: MessageSquare, label: "用户反馈" },
   { to: "/sites", icon: Globe, label: "站点管理" },
+  ...(isAdmin() ? [{ to: "/users", icon: Users, label: "用户管理" }] : []),
 ];
 
 interface SiteItem {

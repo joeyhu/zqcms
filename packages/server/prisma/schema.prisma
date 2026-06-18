@@ -31,7 +31,7 @@ model Site {
   icp           String? // ICP 备案号（如 京ICP备2024000001号）
   isActive      Boolean  @default(true) // 是否启用
   createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  updatedAt   DateTime @default(now()) @updatedAt
 
   categories    Category[]
   posts         Post[]
@@ -114,13 +114,16 @@ enum PostStatus {
 // 用户（全局管理员，不变）
 // ==========================================
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  password  String
-  name      String?
-  role      Role     @default(EDITOR)
-  posts     Post[]
-  createdAt DateTime @default(now())
+  id          String   @id @default(cuid())
+  email       String   @unique
+  password    String
+  name        String?
+  role        Role     @default(EDITOR)
+  isActive    Boolean  @default(true)
+  permissions Json?    // 菜单权限: ["posts", "categories", "tags", "media", "settings", "sites", "users"]
+  posts       Post[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now()) @updatedAt
 }
 
 enum Role {

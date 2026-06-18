@@ -6,6 +6,7 @@ import { TreeSelect } from "@/components/ui/TreeSelect";
 import { IconPicker } from "@/components/ui/IconPicker";
 import { getIconComponent } from "@/lib/icons";
 import toast from "react-hot-toast";
+import { AutoExpandingTextarea } from "@/components/ui/AutoExpandingTextarea";
 
 export function CategoryFormPage() {
   const { id } = useParams();
@@ -128,16 +129,28 @@ export function CategoryFormPage() {
             required
             className="block w-full rounded-lg border px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
           />
-          <p className="mt-1 text-xs text-gray-400">URL 中的唯一标识，如 docs、blog，建议用英文和连字符</p>
+          <p className="mt-1 text-xs text-gray-400">
+            URL 中的唯一标识，如 docs、blog，建议用英文和连字符
+          </p>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">图标</label>
-          <button type="button" onClick={() => setShowIconPicker(true)}
-            className="flex items-center gap-2 w-full rounded-lg border px-3 py-2 text-sm hover:border-blue-400 transition-colors text-left">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            图标
+          </label>
+          <button
+            type="button"
+            onClick={() => setShowIconPicker(true)}
+            className="flex items-center gap-2 w-full rounded-lg border px-3 py-2 text-sm hover:border-blue-400 transition-colors text-left"
+          >
             {icon ? (
               <>
                 <span className="flex items-center justify-center w-6 h-6 rounded bg-gray-100">
-                  {(() => { const Ico = getIconComponent(icon); return Ico ? <Ico className="h-4 w-4 text-gray-600" /> : null; })()}
+                  {(() => {
+                    const Ico = getIconComponent(icon);
+                    return Ico ? (
+                      <Ico className="h-4 w-4 text-gray-600" />
+                    ) : null;
+                  })()}
                 </span>
                 <span className="text-gray-700">{icon}</span>
               </>
@@ -146,17 +159,22 @@ export function CategoryFormPage() {
             )}
           </button>
           {showIconPicker && (
-            <IconPicker value={icon} onChange={setIcon} onClose={() => setShowIconPicker(false)} />
+            <IconPicker
+              value={icon}
+              onChange={setIcon}
+              onClose={() => setShowIconPicker(false)}
+            />
           )}
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             描述
           </label>
-          <textarea
+          <AutoExpandingTextarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={3}
+            placeholder="请填写描述"
             className="block w-full rounded-lg border px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
           />
         </div>
@@ -164,7 +182,7 @@ export function CategoryFormPage() {
           <label className="block text-sm font-medium text-gray-700 mb-1">
             外部链接
           </label>
-          <textarea
+          <AutoExpandingTextarea
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             placeholder="设置后导航点击在新标签页打开，留空则展示目录内容页"

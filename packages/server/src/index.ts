@@ -13,6 +13,7 @@ import { siteManageRoutes } from './routes/sites-manage';
 import { llmRoutes } from './routes/llm';
 import { publishRoutes } from './routes/publish';
 import { feedbackRoutes } from './routes/feedback';
+import { userRoutes } from './routes/users';
 import type { SiteContext } from './middleware/site';
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
@@ -127,6 +128,7 @@ const app = new Elysia()
   .use(tagRoutes)
   .use(sitemapRoutes)
   .use(feedbackRoutes)
+  .use(userRoutes)
 
   // ---- 全局错误处理 ----
   .onError(({ code, error }) => {

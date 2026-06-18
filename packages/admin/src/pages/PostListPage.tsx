@@ -187,9 +187,11 @@ export function PostListPage() {
             <thead className="bg-gray-50 text-left text-gray-500">
               <tr>
                 <th className="px-4 py-3 w-8">
-                  <button onClick={toggleAll} className="text-gray-300 hover:text-blue-500">
-                    {selected.size === posts.length ? <CheckSquare className="h-4 w-4 text-blue-500" /> : <Square className="h-4 w-4" />}
-                  </button>
+                  <Tooltip content={selected.size === posts.length ? '取消全选' : '全选'}>
+                    <button onClick={toggleAll} className="text-gray-300 hover:text-blue-500">
+                      {selected.size === posts.length ? <CheckSquare className="h-4 w-4 text-blue-500" /> : <Square className="h-4 w-4" />}
+                    </button>
+                  </Tooltip>
                 </th>
                 <th className="px-4 py-3 font-medium">标题</th>
                 <th className="px-4 py-3 font-medium whitespace-nowrap">分类</th>
@@ -202,9 +204,11 @@ export function PostListPage() {
               {posts.map((post) => (
                 <tr key={post.id} className={`hover:bg-gray-50 ${selected.has(post.id) ? 'bg-blue-50/50' : ''}`}>
                   <td className="px-4 py-3">
-                    <button onClick={() => toggleSelect(post.id)} className="text-gray-300 hover:text-blue-500">
-                      {selected.has(post.id) ? <CheckSquare className="h-4 w-4 text-blue-500" /> : <Square className="h-4 w-4" />}
-                    </button>
+                    <Tooltip content={selected.has(post.id) ? '取消选择' : '选择'}>
+                      <button onClick={() => toggleSelect(post.id)} className="text-gray-300 hover:text-blue-500">
+                        {selected.has(post.id) ? <CheckSquare className="h-4 w-4 text-blue-500" /> : <Square className="h-4 w-4" />}
+                      </button>
+                    </Tooltip>
                   </td>
                   <td className="px-4 py-3">
                     <div>

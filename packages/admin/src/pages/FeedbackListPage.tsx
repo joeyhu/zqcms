@@ -3,6 +3,7 @@ import { fetchAPI } from '@/lib/api-client';
 import type { Feedback } from '@zqcms/shared/types';
 import { MessageSquare, Phone, Mail, Eye, Check, X, Trash2, ExternalLink } from 'lucide-react';
 import { useConfirm } from '@/components/ui/ConfirmDialog';
+import { Tooltip } from '@/components/ui/Tooltip';
 import toast from 'react-hot-toast';
 
 const STATUS_LABELS: Record<string, string> = {

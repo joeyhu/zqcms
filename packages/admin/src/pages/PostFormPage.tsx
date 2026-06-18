@@ -13,6 +13,7 @@ import { MarkdownEditor } from "@/components/editor/MarkdownEditor";
 import { TreeSelect } from "@/components/ui/TreeSelect";
 import { Tooltip } from "@/components/ui/Tooltip";
 import toast from "react-hot-toast";
+import { AutoExpandingTextarea } from "@/components/ui/AutoExpandingTextarea";
 
 export function PostFormPage() {
   const { id } = useParams();
@@ -45,7 +46,9 @@ export function PostFormPage() {
   const [aiAction, setAiAction] = useState<string | null>(null);
   const [aiSavePending, setAiSavePending] = useState(false);
   const [tagPicker, setTagPicker] = useState<{ tags: string[] } | null>(null);
-  const [tagPickerSelected, setTagPickerSelected] = useState<Set<string>>(new Set());
+  const [tagPickerSelected, setTagPickerSelected] = useState<Set<string>>(
+    new Set(),
+  );
   const [tagPickerSaving, setTagPickerSaving] = useState(false);
   const [mediaList, setMediaList] = useState<
     Array<{ id: number; url: string; filename: string; mimeType: string }>
@@ -73,7 +76,9 @@ export function PostFormPage() {
         setIsFeatured(post.isFeatured);
         setIsPinned(post.isPinned);
         setCoverImage(post.coverImage || "");
-        setSelectedTagIds((post.tags || []).map((t: any) => (t.tag || t).id).filter(Boolean));
+        setSelectedTagIds(
+          (post.tags || []).map((t: any) => (t.tag || t).id).filter(Boolean),
+        );
       });
     }
   }, [id, isEdit]);
@@ -126,8 +131,8 @@ export function PostFormPage() {
 
     const slug = name
       .toLowerCase()
-      .replace(/[^\w\u4e00-\u9fff]+/g, '-')
-      .replace(/^-+|-+$/g, '');
+      .replace(/[^\w\u4e00-\u9fff]+/g, "-")
+      .replace(/^-+|-+$/g, "");
     if (!slug) return;
 
     // 检查是否已存在于本地列表中（不区分大小写）
@@ -136,22 +141,22 @@ export function PostFormPage() {
       if (!selectedTagIds.includes(existing.id)) {
         setSelectedTagIds((prev) => [...prev, existing.id]);
       }
-      setNewTagName('');
+      setNewTagName("");
       return;
     }
 
     setAddingTag(true);
     try {
-      const created = await fetchAPI<Tag>('/tags', {
-        method: 'POST',
+      const created = await fetchAPI<Tag>("/tags", {
+        method: "POST",
         body: JSON.stringify({ name, slug }),
       });
       setTags((prev) => [...prev, created]);
       setSelectedTagIds((prev) => [...prev, created.id]);
-      setNewTagName('');
+      setNewTagName("");
       toast.success(`已添加标签「${name}」`);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : '添加标签失败');
+      toast.error(err instanceof Error ? err.message : "添加标签失败");
     } finally {
       setAddingTag(false);
     }
@@ -246,7 +251,9 @@ export function PostFormPage() {
             // 弹出标签选择窗口
             setTagPicker({ tags: res.tags });
             setTagPickerSelected(new Set(res.tags));
-            toast.success(`AI 建议了 ${res.tags.length} 个标签，请在弹窗中选择`);
+            toast.success(
+              `AI 建议了 ${res.tags.length} 个标签，请在弹窗中选择`,
+            );
           }
           break;
         case "classify":
@@ -268,24 +275,24 @@ export function PostFormPage() {
             }
           }
           break;
-        case 'generateTitle':
+        case "generateTitle":
           if (res.result) setTitle(res.result);
-          toast.success('AI 标题生成完成，正在自动保存...');
+          toast.success("AI 标题生成完成，正在自动保存...");
           break;
-        case 'format':
+        case "format":
           if (res.result) setContent(res.result);
-          toast.success('AI 排版优化完成，正在自动保存...');
+          toast.success("AI 排版优化完成，正在自动保存...");
           break;
-        case 'generateSeo':
+        case "generateSeo":
           if (res.seoTitle) setSeoTitle(res.seoTitle);
           if (res.seoDesc) setSeoDesc(res.seoDesc);
-          toast.success('AI SEO 数据生成完成，正在自动保存...');
+          toast.success("AI SEO 数据生成完成，正在自动保存...");
           break;
       }
 
       // AI 操作成功后触发自动保存（effect 在状态更新后执行）
       // 标签提取除外：需要用户在弹窗中选择后才保存
-      if (action !== 'extractTags') {
+      if (action !== "extractTags") {
         setAiSavePending(true);
       }
     } catch (err) {
@@ -303,19 +310,19 @@ export function PostFormPage() {
     }
     setTagPickerSaving(true);
     try {
-      const createdTags: Tag[] = await fetchAPI<Tag[]>('/tags/batch-create', {
-        method: 'POST',
+      const createdTags: Tag[] = await fetchAPI<Tag[]>("/tags/batch-create", {
+        method: "POST",
         body: JSON.stringify({ names: Array.from(tagPickerSelected) }),
       });
       const tagIds = (createdTags || []).map((t) => t.id);
       setSelectedTagIds(tagIds);
       setTagPicker(null);
-      const updatedTags = await fetchAPI<Tag[]>('/tags');
+      const updatedTags = await fetchAPI<Tag[]>("/tags");
       setTags(updatedTags || []);
       toast.success(`已保存 ${createdTags.length} 个标签，正在自动保存文章...`);
       setAiSavePending(true);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : '保存标签失败');
+      toast.error(err instanceof Error ? err.message : "保存标签失败");
     } finally {
       setTagPickerSaving(false);
     }
@@ -377,14 +384,16 @@ export function PostFormPage() {
           </div>
         )}
 
-        <div className={`grid gap-6 lg:grid-cols-3 ${aiAction ? 'pointer-events-none opacity-60' : ''}`}>
+        <div
+          className={`grid gap-6 lg:grid-cols-3 ${aiAction ? "pointer-events-none opacity-60" : ""}`}
+        >
           {/* Main */}
           <div className="space-y-4 lg:col-span-2">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 标题
               </label>
-              <textarea
+              <AutoExpandingTextarea
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 required
@@ -541,7 +550,9 @@ export function PostFormPage() {
                     type="text"
                     value={newTagName}
                     onChange={(e) => setNewTagName(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTag())}
+                    onKeyDown={(e) =>
+                      e.key === "Enter" && (e.preventDefault(), handleAddTag())
+                    }
                     placeholder="输入新标签名..."
                     className="flex-1 rounded-lg border px-3 py-1.5 text-xs focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
                     disabled={addingTag}
@@ -552,7 +563,7 @@ export function PostFormPage() {
                     disabled={!newTagName.trim() || addingTag}
                     className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-600 hover:bg-blue-100 disabled:opacity-40 transition-colors"
                   >
-                    {addingTag ? '添加中...' : '添加'}
+                    {addingTag ? "添加中..." : "添加"}
                   </button>
                 </div>
                 {/* 现有标签 */}
@@ -587,7 +598,9 @@ export function PostFormPage() {
                     })}
                   </div>
                 ) : (
-                  <p className="text-xs text-gray-400 py-2">暂无标签，可在上方输入框添加</p>
+                  <p className="text-xs text-gray-400 py-2">
+                    暂无标签，可在上方输入框添加
+                  </p>
                 )}
               </div>
 
@@ -683,11 +696,13 @@ export function PostFormPage() {
               <div className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
-                  onClick={() => handleAiAssist('generateTitle')}
+                  onClick={() => handleAiAssist("generateTitle")}
                   disabled={!!aiAction}
                   className="rounded-lg border border-purple-200 px-3 py-1.5 text-xs font-medium text-purple-600 hover:bg-purple-50 disabled:opacity-50 transition-colors"
                 >
-                  {aiAction === 'generateTitle' ? '⏳ 标题中...' : '💡 生成标题'}
+                  {aiAction === "generateTitle"
+                    ? "⏳ 标题中..."
+                    : "💡 生成标题"}
                 </button>
                 <button
                   type="button"
@@ -723,23 +738,24 @@ export function PostFormPage() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => handleAiAssist('format')}
+                  onClick={() => handleAiAssist("format")}
                   disabled={!!aiAction}
                   className="rounded-lg border border-purple-200 px-3 py-1.5 text-xs font-medium text-purple-600 hover:bg-purple-50 disabled:opacity-50 transition-colors"
                 >
-                  {aiAction === 'format' ? '⏳ 排版中...' : '📐 优化排版'}
+                  {aiAction === "format" ? "⏳ 排版中..." : "📐 优化排版"}
                 </button>
                 <button
                   type="button"
-                  onClick={() => handleAiAssist('generateSeo')}
+                  onClick={() => handleAiAssist("generateSeo")}
                   disabled={!!aiAction}
                   className="rounded-lg border border-purple-200 px-3 py-1.5 text-xs font-medium text-purple-600 hover:bg-purple-50 disabled:opacity-50 transition-colors"
                 >
-                  {aiAction === 'generateSeo' ? '⏳ SEO中...' : '🔍 生成SEO'}
+                  {aiAction === "generateSeo" ? "⏳ SEO中..." : "🔍 生成SEO"}
                 </button>
               </div>
               <p className="text-[11px] text-gray-400 leading-relaxed">
-                基于已配置的 LLM 模型，AI 可辅助生成标题、SEO、优化排版、续写文章、生成摘要、提取标签和自动推荐分类。
+                基于已配置的 LLM 模型，AI
+                可辅助生成标题、SEO、优化排版、续写文章、生成摘要、提取标签和自动推荐分类。
               </p>
             </div>
 
@@ -760,7 +776,7 @@ export function PostFormPage() {
                 <label className="block text-xs text-gray-500 mb-1">
                   SEO 描述
                 </label>
-                <textarea
+                <AutoExpandingTextarea
                   value={seoDesc}
                   onChange={(e) => setSeoDesc(e.target.value)}
                   rows={3}
@@ -774,7 +790,7 @@ export function PostFormPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   摘要
                 </label>
-                <textarea
+                <AutoExpandingTextarea
                   value={excerpt}
                   onChange={(e) => setExcerpt(e.target.value)}
                   rows={3}
@@ -789,8 +805,14 @@ export function PostFormPage() {
 
       {/* AI 标签选择弹窗 */}
       {tagPicker && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setTagPicker(null)}>
-          <div className="w-full max-w-md rounded-xl bg-white shadow-2xl" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+          onClick={() => setTagPicker(null)}
+        >
+          <div
+            className="w-full max-w-md rounded-xl bg-white shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex items-center justify-between px-5 py-4 border-b">
               <div>
                 <h3 className="font-semibold text-gray-900">AI 建议标签</h3>
@@ -799,7 +821,10 @@ export function PostFormPage() {
                 </p>
               </div>
               <Tooltip content="关闭">
-                <button onClick={() => setTagPicker(null)} className="rounded-lg p-1 text-gray-400 hover:bg-gray-100">
+                <button
+                  onClick={() => setTagPicker(null)}
+                  className="rounded-lg p-1 text-gray-400 hover:bg-gray-100"
+                >
                   <X className="h-5 w-5" />
                 </button>
               </Tooltip>
@@ -810,8 +835,8 @@ export function PostFormPage() {
                   key={tag}
                   className={`flex items-center gap-3 rounded-lg border px-4 py-2.5 cursor-pointer transition-colors ${
                     tagPickerSelected.has(tag)
-                      ? 'border-blue-300 bg-blue-50'
-                      : 'border-gray-200 hover:bg-gray-50'
+                      ? "border-blue-300 bg-blue-50"
+                      : "border-gray-200 hover:bg-gray-50"
                   }`}
                 >
                   <input
@@ -826,9 +851,13 @@ export function PostFormPage() {
                     }}
                     className="rounded"
                   />
-                  <span className="text-sm font-medium text-gray-900">{tag}</span>
+                  <span className="text-sm font-medium text-gray-900">
+                    {tag}
+                  </span>
                   {tags.find((t) => t.name === tag) && (
-                    <span className="text-[10px] text-green-600 bg-green-50 rounded px-1.5 py-0.5">已有</span>
+                    <span className="text-[10px] text-green-600 bg-green-50 rounded px-1.5 py-0.5">
+                      已有
+                    </span>
                   )}
                 </label>
               ))}
@@ -839,7 +868,9 @@ export function PostFormPage() {
                 disabled={tagPickerSaving || tagPickerSelected.size === 0}
                 className="flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
               >
-                {tagPickerSaving ? '保存中...' : `保存所选标签 (${tagPickerSelected.size})`}
+                {tagPickerSaving
+                  ? "保存中..."
+                  : `保存所选标签 (${tagPickerSelected.size})`}
               </button>
               <button
                 onClick={() => setTagPicker(null)}
